@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>User Behavior Simulation</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css">
+
+    <!-- <script src= "http://code.jquery.com/jquery-latest.min.js"></script> -->
+    <!-- Load d3.js and c3.js -->
+    <!-- <link rel="stylesheet" href=" -->
+<!-- https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css" charset="utf-8"> -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.1.6.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"   integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="   crossorigin="anonymous"></script>
+    <script type="text/javascript"  src="{{ url_for('static', filename='checkCookie.js') }}"></script>
+    <script type="text/javascript"  src="{{ url_for('static', filename='tracker.js') }}"></script>
+    <script type="text/javascript"  src="{{ url_for('static', filename='gaussian.js') }}"></script>
+    <script type="text/javascript"  src="{{ url_for('static', filename='Pr.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>
+
+</head>
+
+<body>
+  <select id="options">
+    {% for item in categories%}
+    <option value="{{item}}">{{item}}</option>
+    {% endfor %}
+  </select>
+
+  <div id="all-news">
+    {% for article in news['Business']['value'] %}
+    <div class="single-carousel-element">
+      <a  href="{{article['url']}}" target="reader">
+        <img src="{{article['image']['thumbnail']['contentUrl']}}" class= "single-article-image">
+        <p class='single-article-description'>
+          {{article['description']}}
+        </p>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  <div id="frame">
+    <iframe id="actualIframe" src="" name="reader" onerror="error" allowfullscreen>
+    </iframe>
+  </div>
+  <div id="charts">
+    <div id="chartContainer1">
+    </div>
+    <div id="chartContainer2">
+  	</div>
+
+  </div>
+  <script type="text/javascript">
+    checkCookie();
+
+    mean_atsop = {{data['atsop_mean']}};
+    mean_sd = {{data['sd_mean']}};
+    catsop = {{data['catsop']}};
+    visits = {{data['visits']}};
+    interval = 3000; // ms
+    startSession();
+
+    $.get("http://0.0.0.0:9090/getNews" , function(data){
+        news = data;
+      }, "json")
+
+
+    $("#options").change(function() {
+      saveTime();
+      category = $(this).find("option:selected").attr('value');
+      $('#all-news').empty();
+      str =""
+      articles = news[category].value
+
+
+      for (x in articles){
+        str = str + '<div class ="single-carousel-element">' + '<a href='+articles[x]["url"]+' target="reader">' +
+                '<img src=' + articles[x]["image"]["thumbnail"]["contentUrl"] + ' class="single-article-image">' +
+                '<p class="single-article-description">' + articles[x]["description"] + '</p></a></div></div>'
+
+      }
+      $("#all-news").html(str)
+      trackClicks();
+    });
+    trackClicks();
+
+      var chart1 = new CanvasJS.Chart("chartContainer2",{
+        title:{
+          text: "Value from User's reaction"
+        },
+      data: [
+    		{
+          type:"spline",
+          name: "Total Expected Value",
+          showInLegend: true,
+    			dataPoints: null,
+          color:"Crimson"
+    		},
+        {
+          type:"spline",
+          name:"Value from Video Advertisement",
+          showInLegend: true,
+          dataPoints:null,
+          color:"DarkSalmon"
+        },
+        {
+          type:"spline",
+          name:"Value from browsing behavior",
+          showInLegend: true,
+          dataPoints:null,
+          color:"CadetBlue"
+        },
+        {
+          type:"spline",
+          name:"Subscription Value",
+          showInLegend: true,
+          dataPoints:null,
+          color:"DarkGreen"
+        }
+    	]
+    });
+
+    var chart2 = new CanvasJS.Chart("chartContainer1",{
+      title:{
+        text: "Likelihood of User's reaction"
+      },
+    data: [
+    {
+      type:"spline",
+      name: "Wait for video ad to finish",
+      showInLegend: true,
+      dataPoints: null,
+      color:"DarkSalmon"
+    },
+    {
+      type:"spline",
+      name: "Keep on browsing",
+      showInLegend: true,
+      dataPoints:null,
+      color:"CadetBlue"
+    },
+    {
+      type:"spline",
+      name: "Yield to paywall",
+      showInLegend: true,
+      dataPoints:null,
+      color:"DarkGreen"
+    }
+    ]
+    });
+
+  </script>
+</body>
+
+</html>

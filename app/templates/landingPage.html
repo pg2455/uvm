@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Behavior Simulation</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script type="text/javascript"  src="{{ url_for('static', filename='checkCookie.js') }}"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+
+</head>
+
+<body>
+  <button id="start-button" onClick="loadHome()" type="button">Start Session</button>
+  <script type="text/javascript">
+  checkCookie();
+
+    function loadHome() {
+      window.location.href = 'http://0.0.0.0:9090/loadHome'
+    };
+
+  </script>
+</body>
+
+</html>
