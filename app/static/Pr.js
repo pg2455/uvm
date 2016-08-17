@@ -92,10 +92,15 @@ function getPdf(lacr, slacr, mean,std){
   x = lacr-slacr;
   numerator = normal_distribution.pdf((x-mean)/std)/std;
   denominator = normal_distribution.cdf((1-mean)/std) - normal_distribution.cdf((-1-mean)/std);
-  console.log('getPdf', sessionTimes.slice(-1), (x-mean)/std);
+  console.log('getPdf', sessionTimes.slice(-1) (x-mean)/std);
   return numerator/denominator;
 }
 
 function getProb(leaving, false_){
   return false_/(leaving+false_);
+}
+
+
+for(x=9; x<170; x++){
+
 }

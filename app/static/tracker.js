@@ -10,30 +10,10 @@ function trackClicks(){
 
 // start your session
 function startSession() {
+  SD=1;
   startTime = (new Date()).getTime();
   sessionTimes = [];
-  sessionStartTime =  (new Date()).getTime();
-
-  //plotting variables
-  chart_pv =[], chart_pr=[],chart_pp=[];
-  value_pv =[], value_pr=[], value_pp=[];
-  total_value = [];
-
-  // cost constants
-  Cv = 2; // cents
-  Cp = 33.33; //cents
-  rppv = 10; //cents
-  future_impact = 1.01 // future impact
-
-  // regression constants
-  beta_atsop = 2/mean_atsop;
-  beta_sd = 0.1/mean_sd;
-  video_constant = 0;
-  recommendation_constant = 1.044;
-
-  beta_subscription_atsop = 1/catsop;
-  beta_subscription_pv = 0.1/(visits * mean_sd);
-  subscription_constant = 4;
+  sessionStartTime =  startTime;
 }
 
 // store time spent
@@ -41,7 +21,9 @@ function saveTime(){
   endTime = (new Date()).getTime();
   elapsedTime = endTime - startTime;  // in ms
   sessionTimes.push(elapsedTime);
-  startTime = (new Date()).getTime();
+  startTime = endTime;
+  SD+=1;
+
 }
 
 // unload event
@@ -66,72 +48,53 @@ function cutArray(an_array){
     return an_array.splice(-10);
   }
 }
+continueFurther = true;
+atsop_count = 0;
+current_cell =1;
+prev_cell = current_cell;
+
+function sendFeedback(current_cell, prev_cell, action, reaction){
+  $.ajax({
+    url:'http://0.0.0.0:9090/updates',
+    contentType:"application/json",
+    data:JSON.stringify({"prev_state":prev_cell, "next_state":current_cell, "action":action, "reaction":reaction}),
+    type:"POST",
+    success: function(){
+      console.log("ssd")
+    }
+  })
+}
+
+function takeAction(){
+  random_number = Math.random();
+  ActionTaken ="Nothing"
+}
 
 // call this function every second to calculate the prob of video and links
 window.setInterval(function(){
-  // calculate probabilities of user's reaction
-  time_diff = (new Date()).getTime() - sessionStartTime;
+    takeAction();
+    if(ActionTaken == 'Nothing'){
 
-  slacr = sessionTimes.slice(-1)/time_diff;
-  lacr = ((new Date()).getTime() - startTime)/time_diff;
-  sd = sessionTimes.length + 1;
-  console.log("interval",sd, sessionTimes.slice(-1), time_diff, lacr*time_diff)
-  cum_atsop = catsop + time_diff
+        atsop_count +=1
+        current_cell = (SD-1)*MAX_ATSOP_ROWS + Math.ceil(atsop_count/ATSOP_GAP)
+        console.log(atsop_count, current_cell, prev_cell, SD);
+        if(current_cell != prev_cell){
+          action = ActionTaken;
+          sd_diff = SD - prev_sd;
 
-  pv = 1-1/(1+Math.exp(-(beta_atsop*time_diff - video_constant)))
-  chart_pv.push({y:pv})
+          if(sd_diff>0){
+            for(x=0; x< sd_diff; x++ ){
+              reaction = 'right';
+              sendFeedback(current_cell, prev_cell+ (x *MAX_ATSOP_ROWS), action, reaction)
+            };
+          }else {
+            reaction="down";
+            sendFeedback(current_cell, prev_cell, action, reaction)
+          }
+        }
+        prev_cell = current_cell
 
-  if (sd ==1){
-    pr  = 1- Math.exp(beta_sd*sd + beta_atsop*time_diff- recommendation_constant)
-  }else{
-    pr = getPr(lacr,slacr, sd)
+
+      prev_sd = SD;
   }
-  // pr  = 1- Math.exp(beta_sd*sd + beta_atsop*time_diff- recommendation_constant)
-
-  chart_pr.push({y:pr})
-
-  pp = 1/(1+Math.exp(-(beta_subscription_atsop*cum_atsop + beta_subscription_pv*(visits*mean_sd + sd) - subscription_constant )));
-  chart_pp.push({y:pp})
-
-
-  // use above to recommend action to publisher
-  total  =  pv + pr +pp
-  av = pv/total;
-  ar = pr/total;
-  ap = pp/total;
-
-  // expected values from above probabilistic actions
-  Cr = (rppv + ap*pp*Cp + av*Cv)/(1-ar*pr + pr*future_impact*(ap*(1-pp) + av*(1-pv)))
-  _value_pr = pr*Cr
-  _value_pv = -(1-pv)*pr*Cr + Cv
-  _value_pp = -(1-pp)*pr*Cr + pp*Cp
-  value_pr.push({y:_value_pr}); value_pv.push({y:_value_pv}); value_pp.push({y:_value_pp});
-
-
-  _total_value = av*_value_pv + ar*_value_pr + ap*_value_pp;
-  total_value.push({y:_total_value});
-
-  //
-  // chart_pv = cutArray(chart_pv); chart_pr= cutArray(chart_pr); chart_pp = cutArray(chart_pp)
-  // value_pv= cutArray(value_pv); value_pr = cutArray(value_pr); value_pp = cutArray(value_pp)
-  // total_value = cutArray(total_value)
-
-
-  // console.log(_total_value)
-
-  //plot above values
-  chart1.options.data[0].dataPoints = total_value;
-  chart1.options.data[1].dataPoints = value_pv;
-  chart1.options.data[2].dataPoints = value_pr;
-  chart1.options.data[3].dataPoints = value_pp;
-
-  chart1.render();
-
-  chart2.options.data[0].dataPoints = chart_pv;
-  chart2.options.data[1].dataPoints = chart_pr;
-  chart2.options.data[2].dataPoints = chart_pp;
-
-  chart2.render();
-
-
 }, interval);
