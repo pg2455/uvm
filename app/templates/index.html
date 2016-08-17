@@ -77,17 +77,19 @@
           <h1>Would you like to contine?.</h1>
           <input type="button" id="yes" value="Skip" />
           <input type="button" id="no" value="End Session" />
+          <input type="button" id="random" value="Stumble Upon" />
   </div>
 
   <script type="text/javascript">
+    // check if he is a returning user
     checkCookie();
 
-
+    // display news
     $.get("http://0.0.0.0:9090/getNews" , function(data){
         news = data;
       }, "json")
 
-
+    // attach news to various options from the drop down menu
     $("#options").change(function() {
       // saveTime();
 
@@ -104,11 +106,6 @@
       }
       $("#all-news").html(str)
     });
-
-
-    action = chooseAction(ACTION_PROB)
-    takeAction(action)
-
 
 
   </script>

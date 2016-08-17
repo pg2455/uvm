@@ -57,9 +57,10 @@ def home():
      categories = categories, actions = parameters["ACTIONS"], prob = json.dumps(parameters["USED_POLICY"]))
 
 
-@app.route('/updates', methods=['POST'])
+@app.route('/feedback', methods=['POST'])
 def updates():
     data = request.json
+    print data
     cookie = request.headers['Cookie']
     if cookie not in user_data:
         return redirect(url_for('home'))

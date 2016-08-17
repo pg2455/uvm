@@ -48,7 +48,6 @@ function takeAction(action){
     $("#no").click(function(){
       reaction = 'dead'
       recordFeedback(CURRENT_CELL, action, reaction)
-      // window.location.href = "http://0.0.0.0:9090/"
     })
     $('.blockOverlay').attr('title','Click to unblock').click($.unblockUI);
   }else{
