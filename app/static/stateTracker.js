@@ -128,26 +128,59 @@ function drawDot(attr,label){
 }
 
 
-function putLabelsOnGrid(){
-  MAX_ATSOP_ROWS  = 10
-  ATSOP_GAP=10
-  WIDTH = 50
+function putLabelsOnGrid(MAX_ATSOP_ROWS, MAX_SD_COLS,ATSOP_GAP, WIDTH){
 
-  _top = parseInt($('#dot').css('top').slice(0,-2))
+
+  _top = parseInt($('#dot').css('top').slice(0,-2)) - WIDTH/2
   _left= parseInt($('#dot').css('left').slice(0,-2))
+  _height_dot = parseInt($('#dot').css('height').slice(0,-2))
 
-  for (i=0; i<MAX_ATSOP_ROWS; i++){
+  for (i=0; i<=MAX_ATSOP_ROWS; i++){
     $('<div/>',{
       class:"label"
     }).addClass('label'+i).appendTo('#labels')
 
-    $('.label'+i).append(ATSOP_GAP*(i+1))
-    $('.label'+i).css('top', (_top + i*WIDTH)+"px")
-    $('.label'+i).css('left', _left-WIDTH/2+"px")
+    $('.label'+i).append(ATSOP_GAP*i)
+    $('.label'+i).css('top', (_top + WIDTH*i + _height_dot/2 )+"px")
+    $('.label'+i).css('left', _left-WIDTH/2 - 25 + "px")
+  }
+
+  for (c=1; c<=MAX_SD_COLS; c++){
+    $('<div/>',{
+      class:"label"
+    }).addClass('label'+(c+i)).appendTo('#labels')
+
+    $('.label'+(c+i)).append(c)
+    $('.label'+(c+i)).css('top', (_top - 20 +"px"))
+    $('.label'+(c+i)).css('left', _left + WIDTH*(c-1) + "px")
   }
 }
 
+function putTitlesOnGrid(top_label, side_label){
+  _top = parseInt($('#dot').css('top').slice(0,-2))
+  _left= parseInt($('#dot').css('left').slice(0,-2))
+  _height_dot = parseInt($('#dot').css('height').slice(0,-2))
+
+  $('<div/>',{
+    class:"title"
+  }).addClass('top_title').appendTo('#titles')
+
+  $('.top_title').append(top_label)
+  $('.top_title').css('top', (_top - 80) +"px")
+  $('.top_title').css('left', _left + "px")
+
+  $('<div/>',{
+    class:"title"
+  }).addClass('title_side').appendTo('#titles')
+
+  $('.title_side').append(side_label)
+  $('.title_side').css('top', (_top + 100) +"px")
+  $('.title_side').css('left', _left - 120 + "px")
+}
+
 createGrid(MAX_ATSOP_ROWS, MAX_SD_COLS, WIDTH)
+putLabelsOnGrid(MAX_ATSOP_ROWS, MAX_SD_COLS,ATSOP_GAP, WIDTH)
+putTitlesOnGrid('Session Depth', 'Time Spent')
 counter = activateCounter()
 
 controller('stop', 'video')
