@@ -9,6 +9,7 @@ def updateQ(Q,REACTION_REWARD,prev_state, next_state, action, reaction,ALPHA, GA
                 ALPHA *( REACTION_REWARD[action][reaction] + GAMMA* max(Q[next_state].itervalues()) - Q[prev_state][action] )
 
     return Q
+
 def recordPolicy(prev_state, action):
     used_policy[prev_state][action]+=1
 
@@ -17,11 +18,9 @@ def optimizePolicy():
     pass
 
 
-def writeToParametersJS(parameters):
-    filename = './static/parameters.js'
-    para_file = open(filename, 'w')
-    for key in parameters:
-        print key
-        para_file.write(key + "=" + parameters[key])
+def computeV(Q):
+    pass
 
-    para_file.close()
+
+def hoardPageValue():
+    pass

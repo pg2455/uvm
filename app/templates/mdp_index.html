@@ -1,5 +1,8 @@
 <html>
 <head>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='GMstyle.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='plots.css') }}">
+
   <!-- Plotly.js -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src= "http://code.jquery.com/jquery-latest.min.js"></script>
@@ -11,7 +14,7 @@
         <img src="http://www.genesismedia.com/wp-content/themes/genesis/images/logo.svg" onerror="this.onerror=null; this.src='http://www.genesismedia.com/wp-content/themes/genesis/images/logo.png'" style="margin: 35px; width: 400px; height: 90px;">
         <button type="button" id="btn" onclick="submitForm()">Simulate</button>
     </div>
-    <h1>SIMULATED UVM (User Value Model)</h1>
+    <h1>SIMULATED BIG SWING MODEL</h1>
   </div>
 
 
@@ -22,9 +25,9 @@
   <table id= "rewards" class="display" cellspacing="0" width="100%">
       <tr>
         <td><strong>Actions/Reactions</strong></td>
-        <td><strong>down (Increase in time spent)</strong></td>
-        <td><strong>right (Increase in #pageviews)<strong></td>
-        <td><strong>dead (User left)<strong></td>
+        <td><strong>down ($ Increase in time spent)</strong></td>
+        <td><strong>right ($ Increase in #pageviews)<strong></td>
+        <td><strong>dead ($ User left)<strong></td>
         <td><strong>Use rate<strong></td>
       </tr>
       <tr class="inputs">
@@ -35,6 +38,39 @@
         <td class="use_rate"><input type="number" value="0.6"></td>
       </tr>
   </table>
+
+  <br><br>ALPHA:
+  <input type="number" class="vars" name="ALPHA" value=0.5>
+  &ensp; GAMMA:
+  <input type="number" class="vars" name="GAMMA" value=0.5>
+    &ensp;MAX_ATSOP_ROWS:
+  <input type="number" class="vars" name="MAX_ATSOP_ROWS" value=10>
+  &ensp; MAX_SD_COLS:
+  <input type="number" class="vars" name="MAX_SD_COLS" value=5>
+  &ensp; ATSOP_GAP(seconds):
+  <input type="number" class="vars" name="ATSOP_GAP" value=5>
+
+<hr>
+  <div id="Q" class="results">
+    <h3>Q-Actions</h3>
+  <!-- Plotly chart will be drawn inside this DIV -->
+  <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
+  <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
+  <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
+  </div>
+
+  <div id="others" class="results">
+    <div id="optimum" class="minions">
+      <h3>Optimal policy</h3>
+    <div>
+    <div id="value" class= "minions">
+      <h3>Value Matrix</h3>
+    </div>
+  </div>
+
+</body>
+
+<!-- setting up inputs -->
   <script>
     $(document).ready(function() {
       var table = $('rewards')
@@ -43,7 +79,7 @@
       var add_button = $("#update_reward_button");
 
       new_row = '<tr class="inputs"> \
-                    <td class="action"> <input type="text" name="mytext[]"  value="Enter Action"/> </td> \
+                    <td class="action"> <input type="text" name="mytext[]"  placeholder="Enter Action"/> </td> \
                     <td class="down"><input type="number" value = "2"></td> \
                     <td class="right"><input type="number" value = "2" ></td> \
                     <td class="dead"><input type="number" value = "2" ></td> \
@@ -69,107 +105,44 @@
 
   </script>
 
+  <!-- submitting forms -->
+ <script>
+   function submitForm(){
 
 
-  <!-- Plotly chart will be drawn inside this DIV -->
-  <!-- <div id="myDiv" style="width:480px; height:400px;"></div>
-  <script>
-    // initial data..
-    z1 = [
-        [8.83,8.89,8.81,8.87,8.9,8.87],
-        [8.89,8.94,8.85,8.94,8.96,8.92],
-        [8.84,8.9,8.82,8.92,8.93,8.91],
-        [8.79,8.85,8.79,8.9,8.94,8.92],
-        [8.79,8.88,8.81,8.9,8.95,8.92],
-        [8.8,8.82,8.78,8.91,8.94,8.92],
-        [8.75,8.78,8.77,8.91,8.95,8.92],
-        [8.8,8.8,8.77,8.91,8.95,8.94],
-        [8.74,8.81,8.76,8.93,8.98,8.99],
-        [8.89,8.99,8.92,9.1,9.13,9.11],
-        [8.97,8.97,8.91,9.09,9.11,9.11],
-        [9.04,9.08,9.05,9.25,9.28,9.27],
-        [9,9.01,9,9.2,9.23,9.2],
-        [8.99,8.99,8.98,9.18,9.2,9.19],
-        [8.93,8.97,8.97,9.18,9.2,9.18]
-    ];
+     var inputs = $('.inputs')
+     var out ={action:{},params:{}};
+     $.each(inputs, function(t){
+       action = $(inputs[t]).find('.action > input')[0].value;
+       down = $(inputs[t]).find('.down > input')[0].value;
+       dead = $(inputs[t]).find('.dead > input')[0].value;
+       right = $(inputs[t]).find('.right > input')[0].value;
+       use_rate = $(inputs[t]).find('.use_rate > input')[0].value;
+       out.action[action] = {'dead':dead, 'down':down, 'right':right, 'use_rate':use_rate}
+     });
 
-    var data_z1 = {z: z1, type: 'surface'};
-    Plotly.newPlot('myDiv', [data_z1]);
-  </script> -->
+     vars=  $('.vars')
+     $.each(vars, function(t){
+       out.params[vars[t].name] = vars[t].value;
+     })
 
-</body>
+     $.ajax({
+       url:"http://0.0.0.0:9090/loadSetup",
+       type: "POST",
+       data:JSON.stringify(out),
 
-<script>
-  function submitForm(){
+       contentType:"application/json",
+       success:function(response) {
+        //  var newWindow =  window.open("", "_blank");
+        //  newWindow.location.href=response;
+        updatePlots()
+       }
+     });
+   }
 
+ </script>
 
-    var inputs = $('.inputs')
-    var out ={};
-    $.each(inputs, function(t){
-      action = $(inputs[t]).find('.action > input')[0].value;
-      down = $(inputs[t]).find('.down > input')[0].value;
-      dead = $(inputs[t]).find('.dead > input')[0].value;
-      right = $(inputs[t]).find('.right > input')[0].value;
-      use_rate = $(inputs[t]).find('.use_rate > input')[0].value;
-      out[action] = {'dead':dead, 'down':down, 'right':right, 'use_rate':use_rate}
+ <script type="text/javascript"  src="{{ url_for('static', filename='makePlots.js') }}"></script>
 
-    });
-
-    $.ajax({
-      url:"http://0.0.0.0:9090/loadSetup",
-      type: "POST",
-      data:JSON.stringify(out),
-
-      contentType:"application/json",
-      success:function(response) {
-        var newWindow =  window.open("", "_blank");
-        newWindow.location.href=response;
-      }
-    });
-  }
-  //
-  //   for(t in inputs){
-  //     console.log(inputs[t]);
-  //     debugger;
-  //     action = $(inputs[t]).find('.action > input')[0].value;
-  //     down = $(inputs[t]).find('.down > input')[0].value;
-  //     dead = $(inputs[t]).find('.dead > input')[0].value;
-  //     right = $(inputs[t]).find('.right > input')[0].value;
-  //
-  //     out[action] = {'dead':dead, 'down':down, 'right':right}
-  //   }
-  // }
-</script>
-
-
-<!-- redundant code -->
-<!-- Take actions as inputs-->
-<!-- <div class="input_fields_wrap">
-  <strong>Actions</strong><br>
-  <button class="add_field_button">Add Actions</button>
-  <div><input type="text" name="mytext[]" value="Nothing"></div>
-</div>
-<script>
-  $(document).ready(function() {
-    var max_fields = 3;
-    var wrapper = $(".input_fields_wrap");
-    var add_button = $(".add_field_button");
-
-    var x = 1;
-    $(add_button).click(function(e) {
-      e.preventDefault();
-      if(x < max_fields){
-        x++;
-        $(wrapper).append('<div><input type="text" name="mytext[]"/><a href="#" class="remove_field">Remove</a></div>');
-      }
-    });
-
-    $(wrapper).on("click", ".remove_field", function(e){
-      e.preventDefault();
-      $(this).parent('div').remove();
-      x--;
-    })
-  });
-</script> -->
 
 </html>

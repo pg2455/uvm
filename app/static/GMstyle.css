@@ -1,0 +1,186 @@
+h1 {
+	text-align:center;
+	width:100%;
+	background-color:#ea167c;
+	color:#fff;
+	margin:0;
+	font-family:"HelveticaNeue-Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif!important;
+	font-weight:400;
+	font-size:24px;
+	letter-spacing:2px;
+}
+
+#header {
+	background-color:#333234;
+	height:200px;
+	min-width:310px;
+}
+
+#wrapper {
+	width:100%;
+	margin:0 auto;
+	top:0;
+	bottom:0;
+	right:0;
+	left:0;
+	background-color:#333234;
+}
+
+
+#bg {
+	background-image:url(img/background_top.gif);
+	background-repeat:repeat-x;
+	background-size:961px 150px;
+}
+#module-wrap {
+	width:100%;
+  height:800px;
+	max-width:1050px;
+	min-width:450px;
+	margin:0 auto;
+}
+
+
+#footer{
+	background-color: #333234;
+	width: 100%;
+	height: 150px;
+	padding: 15px 15px 0 0;
+}
+.footer-text{
+	width: 100%;
+	    padding-left: 35px;
+}
+
+#pink-text{
+	color: #ea167c;
+}
+#white-text{
+	color: #d6d7d6;
+}
+#grey-text{
+	color: #787879;
+}
+
+#setup{
+  width:30%;
+  height:100%;
+  float:left;
+}
+#nasa{
+  width:65%;
+  height:100%;
+  float:right;
+}
+
+#result{
+  width:100%;
+  height:60% ;
+  clear:left;
+  margin-top:10px;
+}
+#variables{
+  height:35%
+}
+
+.box{
+  border:solid #E10068 3px;
+  margin-top:5px;
+  margin-bottom:5px;
+}
+
+.title {
+  background:#ea167c;
+  color:white;
+	text-transform:uppercase;
+	text-align:center;
+	height:30px;
+  font-size:19px;
+}
+
+#img_container{
+  position:relative;
+}
+
+#btn{
+  position:absolute;
+  float:right;
+  cursor:pointer;
+  margin:0 6px 10px 6px;
+  height:50px;
+  width:12%;
+  text-align:center;
+  border:solid #F1F1F1 1px;
+  padding:13px 22px 10px 22px;
+  color:black;
+  text-decoration:none;
+  right:80px;
+  top:36%;
+  font-size:20px;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+input[type="text"] {
+  display: block;
+  margin: 0;
+  width: auto;
+  font-family: sans-serif;
+  font-size: 15px;
+  appearance: none;
+  box-shadow: none;
+  border-radius: none;
+}
+.style-1 input[type="text"] {
+  padding: 2px;
+  border: solid 1px #dcdcdc;
+  transition: box-shadow 0.3s, border 0.3s;
+}
+
+.style-1 #left{
+	float:left;
+	width: 50%;
+}
+.style-1 #right{
+	float:left;
+	width: 50%;
+	border: 3px;
+}
+
+#chart{
+	position:relative;
+	top:3%;
+}
+
+#info{
+	position:relative;
+	width:100%;
+	height:100px;
+	bottom:0%;
+	text-align:center;;
+}
+#time{
+	position:relative;
+	float:left;
+	width:40%;
+}
+
+#pageviews{
+	position: relative;
+	float:right;
+	width:40%;
+}
+
+marquee{
+	width:50%;
+}
+
+#significance{
+top: 30px;
+text-align: center;
+font-size: 20px;
+font-style: oblique;
+font-weight: bold;
+margin-top: 5px;
+}
+}

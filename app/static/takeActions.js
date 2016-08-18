@@ -1,6 +1,3 @@
-
-var screenBlocked=false;
-
 // Publisher takes actions independednt
 function chooseAction(prob){
   rand = Math.random();
@@ -13,55 +10,47 @@ function chooseAction(prob){
   }
 }
 
-
-
 // takes actions, observes reaction, sends feedback to stateTracker
 function takeAction(action){
 
-  // console.log("Take Action", action, CURRENT_CELL)
-
   if(action.toLowerCase()!='nothing'){
-    takingAction = true
-    // send this feedback to central function
-    at_atsop = atsop
-    screenBlocked = true;
+    controller('stop',action)
+    console.log('Taking action', action)
     $.blockUI({
       message : $('#question').prepend('<h1>'+action+'</h1>'),
       timeout:4000,
       onUnblock: function(){
-        screenBlocked =false;
         reaction = 'down'
-        recordFeedback(CURRENT_CELL, action, reaction)
+        controller('start',reaction)
         $('#question h1').first().remove();
-        takingAction = false;
       }
     });
 
     $('#yes').click(function() {
-        $.unblockUI();
-        screenBlocked = false;
-        reaction = 'down';
-        recordFeedback(CURRENT_CELL, action, reaction)
-        takingAction=false;
+        $.unblockUI(); // this goes to above onUnblock control
     });
 
     $("#no").click(function(){
       reaction = 'dead'
-      recordFeedback(CURRENT_CELL, action, reaction)
+      controller('start',reaction)
     })
+
+    $("#random").click(function(){
+      reaction = 'right'
+      controller('start', reaction)
+      url = stumbleUpon()
+      $('#question h1').first().remove();
+      document.getElementById('actualIframe').setAttribute('src', url)
+    })
+
     $('.blockOverlay').attr('title','Click to unblock').click($.unblockUI);
-  }else{
-    takingAction = false
-    screenBlocked = false;
-    reaction = 'down'
-    recordFeedback(CURRENT_CELL, action, reaction)
   }
 
 }
 
-
 // unload event
 window.onbeforeunload = function() {
   reaction = 'dead'
-  recordFeedback(CURRENT_CELL, action, reaction)
+  controller('stop','nothing')
+  controller('start',reaction) // window will reset to start by itself
 };

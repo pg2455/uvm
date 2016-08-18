@@ -104,6 +104,7 @@ body div {
   transition-duration: 1s;
   -webkit-animation-fill-mode: forwards;
   animation-fill-mode: forwards;
+  z-index: 9999;
 }
 
 .path_dots{
@@ -126,6 +127,24 @@ body div {
   font-weight: bolder;
   font-size: 17px;
 }
+
+#restart{
+  position:absolute;
+  top: 100px;
+  right:200px;
+
+}
+
+#deadpool{
+  top:150px;
+  right:200px;
+  position:absolute;
+  height:50px;
+  width:50px;
+  border:1px solid #000;
+  background:lightslategrey;
+}
+
 
 .title_side{
   -moz-transform:rotate(270deg); /* Firefox */

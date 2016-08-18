@@ -25,6 +25,7 @@
 
       $.getJSON('./static/parameters.json', function(json){
         PARAMETERS=json;
+        console.log(json)
       })
 
       MAX_ATSOP_ROWS = PARAMETERS['MAX_ATSOP_ROWS'];
@@ -36,6 +37,7 @@
       ACTION_PROB = PARAMETERS['USED_POLICY']
 
       REWARDS = PARAMETERS['REACTION_REWARD']
+
     // Set the global configs to synchronous
     $.ajaxSetup({
         async: true
@@ -46,6 +48,7 @@
     <script type="text/javascript"  src="{{ url_for('static', filename='checkCookie.js') }}"></script>
     <script type="text/javascript"  src="{{ url_for('static', filename='takeActions.js') }}"></script>
     <script type="text/javascript"  src="{{ url_for('static', filename='stateTracker.js') }}"></script>
+    <script type="text/javascript"  src="{{ url_for('static', filename='tracker.js') }}"></script>
 
 </head>
 
@@ -80,9 +83,37 @@
           <input type="button" id="random" value="Stumble Upon" />
   </div>
 
+  <div id="dot"></div>
+  <div id="path"></div>
+  <div id='labels'></div>
+  <div id='titles'></div>
+  <input type="button" id="restart" value="End Session"/>
+
+
+
+    <div id = "deadpool">
+    </div>
+
+
+</body>
+
   <script type="text/javascript">
+
+    // MAX_SD_COLS = 3
+    // MAX_ATSOP_ROWS = 10
+    // ATSOP_GAP=2 // seconds
+    //
+    FEEDBACK= []
+    ATSOP = 0
+    SD = 1
+    CELL = 1
+    WIDTH = 50 // for grid in px
+    cnt=0; // for path_dots
+
+
     // check if he is a returning user
     checkCookie();
+    trackClicks(); // attach an event listener to <a> tags
 
     // display news
     $.get("http://0.0.0.0:9090/getNews" , function(data){
@@ -91,8 +122,6 @@
 
     // attach news to various options from the drop down menu
     $("#options").change(function() {
-      // saveTime();
-
       category = $(this).find("option:selected").attr('value');
       $('#all-news').empty();
       str =""
@@ -107,9 +136,12 @@
       $("#all-news").html(str)
     });
 
+    createGrid(MAX_ATSOP_ROWS, MAX_SD_COLS, WIDTH)
+    putLabelsOnGrid(MAX_ATSOP_ROWS, MAX_SD_COLS,ATSOP_GAP, WIDTH)
+    putTitlesOnGrid('Session Depth', 'Time Spent')
+
+    counter = activateCounter();
 
   </script>
-
-</body>
 
 </html>

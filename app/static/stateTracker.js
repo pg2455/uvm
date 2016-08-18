@@ -1,36 +1,28 @@
-FEEDBACK= []
-MAX_SD_COLS = 3
-MAX_ATSOP_ROWS = 10
-ATSOP_GAP=2 // seconds
-ATSOP = ATSOP_GAP
-SD = 1
-CELL = 1
-WIDTH = 50 // for grid in px
-cnt =0 // for path_dots
-
 function recordFeedback(cell, action, reaction){
   // console.log("record feedback", cell,action, reaction, "end")
   if(reaction == 'down'){
-      if(ATSOP > MAX_ATSOP_ROWS*ATSOP_GAP){
+      if(CELL >= MAX_ATSOP_ROWS*SD){
         next_cell = cell
       }else{
-        next_cell = cell +1
-        if(ATSOP!= MAX_ATSOP_ROWS*ATSOP_GAP){
+        next_cell = cell + 1
         drawDot('top', action)
+        FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
-    }
   }else if(reaction == 'right'){
-      SD +=1
-      if(SD > MAX_SD_COLS){
-        SD -= 1
-        next_cell = cell +1
-        drawDot('top', action)
+
+      if(SD >= MAX_SD_COLS){
+        // no reaction
+        next_cell = cell
       }else{
+        SD += 1
         next_cell = cell + MAX_ATSOP_ROWS
         drawDot('left', action)
+        FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
+
+
   }else{
-    next_cell == 1000
+    next_cell = 1000
     FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
 
     $.ajax({
@@ -39,10 +31,10 @@ function recordFeedback(cell, action, reaction){
       data: JSON.stringify({feedback: FEEDBACK}),
       type:"POST",
     });
-    window.location.href = "http://0.0.0.0:9090/"
-  }
-  FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
 
+    endSession(action)
+  }
+  console.log(FEEDBACK.slice(-1))
   CELL = next_cell
 
 }
@@ -50,16 +42,24 @@ function recordFeedback(cell, action, reaction){
 
 function activateCounter(){
   var counter = setInterval(function(){
-    console.log(ATSOP)
 
 
-    if(CELL > MAX_ATSOP_ROWS * MAX_SD_COLS){
-      reaction = 'dead'
-      recordFeedback(CELL-1, 'nothing','dead')
-    }
       ATSOP +=ATSOP_GAP
-      CELL += 1
-      recordFeedback(CELL-1,'nothing', 'down')
+      if (CELL < MAX_ATSOP_ROWS*SD ){
+        recordFeedback(CELL,'nothing', 'down') // first execcution takes place after interval.
+        // when the atsop_gap time is done it crosses that cell
+        // hence record feedback at that instant
+      } else{
+        // do nothing
+      }
+
+
+      // this will be separate but for demo it is here
+      if(CELL%2==0){
+        action = chooseAction(ACTION_PROB)
+        takeAction(action)
+      }
+
   }, ATSOP_GAP*1000)
   return counter
 }
@@ -119,11 +119,16 @@ function drawDot(attr,label){
   $('.path_dots'+cnt).css('top', $("#dot").css('top'))
   $('.path_dots'+cnt).css('left', $("#dot").css('left'))
 
-  if(label.toLowerCase() != 'nothing'){
-    $('.path_dots'+cnt).append("<br>"+label.slice(0,1))
+  // if(label.toLowerCase() != 'nothing'){
+    $('.path_dots'+cnt).append("<br>"+label.slice(0,1) + ATSOP +'-'+CELL)
+  // }
+  if(attr!='dead'){
+    $("#dot").css(attr, "+="+WIDTH+"px");
+  }else{
+    $("#dot").css('top', '170px')
+    $("#dot").css('right', '220px')
   }
 
-  $("#dot").css(attr, "+="+WIDTH+"px");
   cnt+=1
 }
 
@@ -178,14 +183,47 @@ function putTitlesOnGrid(top_label, side_label){
   $('.title_side').css('left', _left - 120 + "px")
 }
 
-createGrid(MAX_ATSOP_ROWS, MAX_SD_COLS, WIDTH)
-putLabelsOnGrid(MAX_ATSOP_ROWS, MAX_SD_COLS,ATSOP_GAP, WIDTH)
-putTitlesOnGrid('Session Depth', 'Time Spent')
-counter = activateCounter()
 
-controller('stop', 'video')
-controller('start', 'down')
-controller('stop', 'rec')
-controller('start', 'right')
-controller('stop','paywall')
-controller('start','down')
+function endSession(label){
+
+  drawDot('dead',label)
+  //notification
+  $.blockUI({
+    message:"<h3>Sending feedback & Updating backend</h3>",
+    fadeIn:700,
+    fadeOut:700,
+    timeout:2000,
+    showOverlay:false,
+    centerY:false,
+    css:{
+      width:'350px',
+      top:'10px' ,
+      left:'',
+      right:'10px' ,
+      border:'none',
+      padding:'5px',
+      backgroundColor: '#000',
+    '-webkit-border-radius': '10px',
+    '-moz-border-radius': '10px',
+    opacity: .6,
+    color: '#fff'
+    }
+  })
+
+
+
+  //close after 2 seconds
+  setTimeout(function(){
+    window.location.href = "http://0.0.0.0:9090/"
+  }, 2000)
+
+
+}
+
+//
+// controller('stop', 'video')
+// controller('start', 'down')
+// controller('stop', 'rec')
+// controller('start', 'right')
+// controller('stop','paywall')
+// controller('start','down')
