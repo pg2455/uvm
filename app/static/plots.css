@@ -11,3 +11,10 @@
 .minions{
   float:left
 }
+
+#value{
+  margin-left:80px;
+}
+#used_policy{
+  margin-left:80px;
+}

@@ -2,7 +2,7 @@ from flask import Response, Flask, request, jsonify, render_template, make_respo
 import json
 # from flask.ext.socketio import SocketIO, emit
 from collections import defaultdict
-from MDP_functions import * # update Q and track policy
+from flask_sockets import Sockets
 
 class setup(object):
     def __init__(self):
@@ -20,12 +20,38 @@ class learnedObjectsVars(object):
     def save(self):
         json.dump(self.vars,open('./static/learnedObjects.json', 'w'))
 
+    def updateQ(self, prev_state, next_state, action, reaction):
+        # update equation
+        Q = self.vars['Q'] # it makes a copy
+        Q[prev_state][action] = Q[prev_state][action] + \
+                    setupVars.vars['ALPHA'] *( setupVars.vars['REACTION_REWARD'][action][reaction] + setupVars.vars['GAMMA']* max(Q[next_state].itervalues()) - Q[prev_state][action] )
+
+    def recordPolicy(self, prev_state, action):
+        self.vars['EXECUTED_POLICY'][prev_state][action]+=1
+
+    def updateVandPolicy(self):
+        Q = self.vars['Q'] # it makes a copy of the name and not create a new object
+        V = self.vars['V']
+        policy = self.vars['OPTIMAL_POLICY']
+
+        for i in V:
+            _max =  max(Q[i].iteritems(), key= lambda x:x[1])
+            V[i] = _max[1]
+            policy[i] = _max[0]
+
+    def hoardPageValue(self):
+        pass
+
 
 setupVars = setup()
 learnedObjects = learnedObjectsVars()
 
+from MDP_functions import * # update Q and track policy
+
+
 import random
 app = Flask(__name__)
+sockets = Sockets(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def welcome():
@@ -67,9 +93,9 @@ def loadSetup():
     EXECUTED_POLICY = {x+1:getActionDict(ACTIONS) for x in range( ncells )}
 
     learnedObjects.vars['Q'] = Q
-    learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:getActionDict(ACTIONS) for x in range(ncells)}
+    learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:'n' for x in range(ncells)}
     learnedObjects.vars['V'] = {x+1: 0 for x in range(ncells)}
-    learnedObjects.vars['ExecutedPolicy'] = EXECUTED_POLICY
+    learnedObjects.vars['EXECUTED_POLICY'] = EXECUTED_POLICY
 
     learnedObjects.save()
 
@@ -90,45 +116,106 @@ def home():
 
 @app.route('/feedback', methods=['POST'])
 def updates():
-    data = request.json
-    print data
-    cookie = request.headers['Cookie']
-    if cookie not in user_data:
-        return redirect(url_for('home'))
+    data = request.json # it has prev_state,next_state, action, reaction
+    print data['feedback']
 
-    Q = updateQ(parameters['Q'],parameters['REACTION_REWARD'], str(data['prev_state']), str(data['next_state']), data['action'],data['reaction'], parameters['ALPHA'], parameters['GAMMA'])
-    parameters['Q'] = Q
-    json.dump(parameters,open('./static/parameters.json', 'w'))
-    print Q
-    return "d"
+    # update Q
+    for i in data['feedback']:
+        learnedObjects.updateQ(i['prev_state'], i['next_state'], i['action'],i['reaction'])
+        learnedObjects.recordPolicy(i['prev_state'], i['action'])
 
+    # find out optimal policy & find out V
+    learnedObjects.updateVandPolicy()
 
-@app.route('/statusUpdate')
-def statusUpdate():
-    print request.json
-    return " "
+    # update value of pages
+
+    setupVars.save()
+    print learnedObjects.vars['Q']
+
+    return "sdf"
 
 @app.route('/getQ')
 def getQ():
     out = defaultdict(list)
-    actions = setupVars.vars['ACTIONS']
-    MAX_ATSOP_ROWS = setupVars.vars['MAX_ATSOP_ROWS']
-    MAX_SD_COLS = setupVars.vars['MAX_SD_COLS']
-    Q = learnedObjects.vars['Q']
 
     # convert the Q dictionary in the format of heatmap
-    for a in actions:
-        for i in Q:
-            if i <= MAX_ATSOP_ROWS:
-                row = [ Q[i+x*MAX_ATSOP_ROWS][a] + random.random() for x in range(MAX_SD_COLS)]
+    for a in setupVars.vars['ACTIONS']:
+        for i in learnedObjects.vars['Q']:
+            if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+                row = [ learnedObjects.vars['Q'][i+x*setupVars.vars['MAX_ATSOP_ROWS']][a]  for x in range(setupVars.vars['MAX_SD_COLS'])]
                 out[a].append(row)
             else:
                 break
+        out[a] = out[a][::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
     return jsonify(out)
+
+
+@app.route('/getV')
+def getV():
+    out = []
+    for i in learnedObjects.vars['V']:
+        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+            row = [ learnedObjects.vars['V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
+            out.append(row)
+        else:
+            break
+    out = out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+    return jsonify({'V' :out})
+
+@app.route('/getPolicy')
+def getPolicy():
+    out1,out2 = [],[]
+    actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
+
+    for i in learnedObjects.vars['V']:
+        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+            tmp1,tmp2 = [],[]
+            for x in range(setupVars.vars['MAX_SD_COLS']):
+                a  = learnedObjects.vars['OPTIMAL_POLICY'][i+x*setupVars.vars['MAX_ATSOP_ROWS']]
+
+                tmp1.append(actions[a[0]])
+                tmp2.append(a[0])
+
+            out1.append(tmp1)
+            out2.append(tmp2)
+        else:
+            break
+    out1,out2 = out1[::-1], out2[::-1]
+    # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+    return jsonify({'policy' :out2, 'number':out1})
+
+@app.route('/getUsedPolicy')
+def getUsedPolicy():
+    p = learnedObjects.vars['EXECUTED_POLICY'].copy()
+    #normalize
+    for i in p:
+        total = sum(p[i].values())
+        _max= max(p[i].iteritems(), key=lambda x:x[1])
+        p[i] = (_max[0], round(1.0*_max[1]/(1+total),2))
+
+    out1,out2 = [],[]
+    actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
+    for i in learnedObjects.vars['V']:
+        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+            tmp1,tmp2 = [],[]
+            for x in range(setupVars.vars['MAX_SD_COLS']):
+                a  = p[i+x*setupVars.vars['MAX_ATSOP_ROWS']]
+                tmp1.append(actions[a[0][0]])
+                tmp2.append(str(a[0][0])+ str(a[1]))
+
+            out1.append(tmp1)
+            out2.append(tmp2)
+        else:
+            break
+    out1,out2 = out1[::-1], out2[::-1]
+    # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+    return jsonify({'policy' :out2, 'number':out1})
+
+
 
 
 if __name__ == "__main__":
     news = json.load(open('./static/news.json'))
-
     user_data = json.load(open('userData.json'))
+
     app.run('0.0.0.0', 9090, debug=True)

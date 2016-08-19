@@ -1,1 +1,1 @@
-{"MAX_SD_COLS": 5, "REACTION_REWARD": {"Nothing": {"down": 2.0, "right": 2.0, "dead": 2.0}}, "ACTIONS": ["Nothing"], "GAMMA": 0.5, "ATSOP_GAP": 5, "ALPHA": 0.5, "USED_POLICY": {"Nothing": 1.0}, "MAX_ATSOP_ROWS": 10}
+{"MAX_SD_COLS": 5, "REACTION_REWARD": {"nothing": {"down": 2.0, "right": 2.0, "dead": 2.0}, "video": {"down": 2.0, "right": 2.0, "dead": 2.0}}, "ACTIONS": ["nothing", "video"], "GAMMA": 0.5, "ATSOP_GAP": 5, "ALPHA": 0.5, "USED_POLICY": {"nothing": 0.7499999999999999, "video": 0.25}, "MAX_ATSOP_ROWS": 10}

@@ -31,7 +31,7 @@
         <td><strong>Use rate<strong></td>
       </tr>
       <tr class="inputs">
-        <td class="action"><input type="text" value="Nothing"></td>
+        <td class="action"><input type="text" value="nothing"></td>
         <td class="down"><input type="number" value="2"></td>
         <td class="right"><input type="number" value="2"></td>
         <td class="dead"><input type="number" value="2"></td>
@@ -51,6 +51,7 @@
   <input type="number" class="vars" name="ATSOP_GAP" value=5>
 
 <hr>
+  <button id="update_results">Update</button>
   <div id="Q" class="results">
     <h3>Q-Actions</h3>
   <!-- Plotly chart will be drawn inside this DIV -->
@@ -62,9 +63,22 @@
   <div id="others" class="results">
     <div id="optimum" class="minions">
       <h3>Optimal policy</h3>
-    <div>
+      <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+    </div>
     <div id="value" class= "minions">
       <h3>Value Matrix</h3>
+      <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
+    </div>
+    <div id="used_policy" class="minions">
+      <h3>Executed Policy</h3>
+      <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+    </div>
+  </div>
+
+  <div id = "pages">
+    <div id="page_value" class="minions">
+      <h3>Value of the Pages</h3>
+      <div id="PageValue" class ="Q" style="width:480px; height:400px;"></div>
     </div>
   </div>
 
@@ -108,8 +122,6 @@
   <!-- submitting forms -->
  <script>
    function submitForm(){
-
-
      var inputs = $('.inputs')
      var out ={action:{},params:{}};
      $.each(inputs, function(t){
@@ -126,6 +138,21 @@
        out.params[vars[t].name] = vars[t].value;
      })
 
+     // for plots
+     MAX_SD_COLS = out.params['MAX_SD_COLS']
+     MAX_ATSOP_ROWS = out.params['MAX_ATSOP_ROWS']
+     ATSOP_GAP = out.params["ATSOP_GAP"]
+
+     x_labels = Array()
+     y_labels = Array()
+     for(i=1; i<=MAX_SD_COLS; i++){
+       x_labels.push(i)
+     }
+
+     for(i=MAX_ATSOP_ROWS; i>0; i--){
+       y_labels.push(ATSOP_GAP*(i-1) + '-' + ATSOP_GAP*i)
+     }
+
      $.ajax({
        url:"http://0.0.0.0:9090/loadSetup",
        type: "POST",
@@ -135,14 +162,22 @@
        success:function(response) {
         //  var newWindow =  window.open("", "_blank");
         //  newWindow.location.href=response;
-        updatePlots()
+        updatePlots(x_labels, y_labels)
        }
      });
+
    }
 
  </script>
 
+
  <script type="text/javascript"  src="{{ url_for('static', filename='makePlots.js') }}"></script>
 
+ <script>
+
+   $("#update_results").click(function(){
+     updatePlots(x_labels, y_labels)
+   })
+ </script>
 
 </html>
