@@ -20,9 +20,10 @@ function takeAction(action){
       message : $('#question').prepend('<h1>'+action+'</h1>'),
       timeout:4000,
       onUnblock: function(){
+        $('#question h1').first().remove();
         reaction = 'down'
         controller('start',reaction)
-        $('#question h1').first().remove();
+
       }
     });
 
@@ -31,6 +32,7 @@ function takeAction(action){
     });
 
     $("#no").click(function(){
+      $.unblockUI();
       reaction = 'dead'
       controller('start',reaction)
     })
@@ -39,7 +41,8 @@ function takeAction(action){
       reaction = 'right'
       controller('start', reaction)
       url = stumbleUpon()
-      $('#question h1').first().remove();
+      URL = url
+      $.unblockUI();
       document.getElementById('actualIframe').setAttribute('src', url)
     })
 

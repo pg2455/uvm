@@ -1,14 +1,14 @@
 
 // track clicks on link
 function trackClicks(){
-  $('a').click( function() {
+  $('a').click( function(s) {
     controller('stop','nothing')
+    URL = s.currentTarget.href
     controller('start','right') // reaction is right
   });
 
   $('#restart').click(function(){
     reaction = 'dead'
-    console.log('ending')
     controller('stop', 'nothing')
     controller('start',reaction) // window will reset to start by itself
   })

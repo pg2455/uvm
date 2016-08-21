@@ -6,7 +6,7 @@ function recordFeedback(cell, action, reaction){
       }else{
         next_cell = cell + 1
         drawDot('top', action)
-        FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
   }else if(reaction == 'right'){
 
@@ -17,14 +17,14 @@ function recordFeedback(cell, action, reaction){
         SD += 1
         next_cell = cell + MAX_ATSOP_ROWS
         drawDot('left', action)
-        FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
 
 
   }else{
     next_cell = 1000
-    FEEDBACK.push({'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
-
+    FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+    controller('stop','nothing')
     $.ajax({
       url: "http://0.0.0.0:9090/feedback",
       contentType: 'application/json; charset=UTF-8',
@@ -34,7 +34,6 @@ function recordFeedback(cell, action, reaction){
 
     endSession(action)
   }
-  console.log(FEEDBACK.slice(-1))
   CELL = next_cell
 
 }
@@ -119,9 +118,9 @@ function drawDot(attr,label){
   $('.path_dots'+cnt).css('top', $("#dot").css('top'))
   $('.path_dots'+cnt).css('left', $("#dot").css('left'))
 
-  // if(label.toLowerCase() != 'nothing'){
-    $('.path_dots'+cnt).append("<br>"+label.slice(0,1) + ATSOP +'-'+CELL)
-  // }
+  if(label.toLowerCase() != 'nothing'){
+    $('.path_dots'+cnt).append("<br>"+label.slice(0,1))
+  }
   if(attr!='dead'){
     $("#dot").css(attr, "+="+WIDTH+"px");
   }else{
@@ -215,7 +214,7 @@ function endSession(label){
   //close after 2 seconds
   setTimeout(function(){
     window.location.href = "http://0.0.0.0:9090/"
-  }, 2000)
+  }, 3000)
 
 
 }

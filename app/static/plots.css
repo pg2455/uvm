@@ -16,5 +16,64 @@
   margin-left:80px;
 }
 #used_policy{
-  margin-left:80px;
+  margin-left:0px;
+}
+
+#pages {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+
+#pages td, #pages th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#pages tr:nth-child(even){background-color: #f2f2f2;}
+
+#pages tr:hover {background-color: #ddd;}
+
+#pages th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn2{
+  position: absolute;
+  cursor:pointer;
+  margin:0 6px 10px 6px;
+  height:25px;
+  width:12%;
+  text-align:center;
+  border:solid #F1F1F1 1px;
+  border-color:black;
+  color:black;
+  text-decoration:none;
+  font-size:15px;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+#update_results{
+  right:44%;
+  top:41%;
+
+}
+
+#update_reward_button{
+  right:44%;
+  top:21%;
+}
+
+#input{
+
+}
+
+#output{
+
 }

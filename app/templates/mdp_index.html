@@ -21,37 +21,46 @@
 
   <!-- Take rewards associated with reactions to actions as inputs-->
   <br><br>
-  <button id="update_reward_button">Add Action/Rewards</button>
-  <table id= "rewards" class="display" cellspacing="0" width="100%">
-      <tr>
-        <td><strong>Actions/Reactions</strong></td>
-        <td><strong>down ($ Increase in time spent)</strong></td>
-        <td><strong>right ($ Increase in #pageviews)<strong></td>
-        <td><strong>dead ($ User left)<strong></td>
-        <td><strong>Use rate<strong></td>
-      </tr>
-      <tr class="inputs">
-        <td class="action"><input type="text" value="nothing"></td>
-        <td class="down"><input type="number" value="2"></td>
-        <td class="right"><input type="number" value="2"></td>
-        <td class="dead"><input type="number" value="2"></td>
-        <td class="use_rate"><input type="number" value="0.6"></td>
-      </tr>
-  </table>
+  <div id="showcase">
+    <div id= "input">
+      <button id="update_reward_button" class= "btn2">Add Action/Rewards</button>
 
-  <br><br>ALPHA:
-  <input type="number" class="vars" name="ALPHA" value=0.5>
-  &ensp; GAMMA:
-  <input type="number" class="vars" name="GAMMA" value=0.5>
-    &ensp;MAX_ATSOP_ROWS:
-  <input type="number" class="vars" name="MAX_ATSOP_ROWS" value=10>
-  &ensp; MAX_SD_COLS:
-  <input type="number" class="vars" name="MAX_SD_COLS" value=5>
-  &ensp; ATSOP_GAP(seconds):
-  <input type="number" class="vars" name="ATSOP_GAP" value=5>
+    <table id= "rewards" class="display" cellspacing="0" width="100%">
+        <tr>
+          <td><strong>Actions/Reactions</strong></td>
+          <td><strong>down ($ Increase in time spent)</strong></td>
+          <td><strong>right ($ Increase in #pageviews)<strong></td>
+          <td><strong>dead ($ User left)<strong></td>
+          <td><strong>Use rate<strong></td>
+        </tr>
+        <tr class="inputs">
+          <td class="action"><input type="text" value="nothing"></td>
+          <td class="down"><input type="number" value="2"></td>
+          <td class="right"><input type="number" value="2"></td>
+          <td class="dead"><input type="number" value="2"></td>
+          <td class="use_rate"><input type="number" value="0.6"></td>
+        </tr>
+    </table>
 
-<hr>
-  <button id="update_results">Update</button>
+    <br><br>ALPHA:
+    <input type="number" class="vars" name="ALPHA" value=0.5>
+    &ensp; GAMMA:
+    <input type="number" class="vars" name="GAMMA" value=0.5>
+      &ensp;MAX_ATSOP_ROWS:
+    <input type="number" class="vars" name="MAX_ATSOP_ROWS" value=10>
+    &ensp; MAX_SD_COLS:
+    <input type="number" class="vars" name="MAX_SD_COLS" value=5>
+    &ensp; ATSOP_GAP(seconds):
+    <input type="number" class="vars" name="ATSOP_GAP" value=2>
+    </div>
+
+  <div>
+    <hr>
+  </div>
+
+  <div id= "output">
+    <div style="height: 60px;"> <button id="update_results" class= "btn2">Update</button></div>
+
   <div id="Q" class="results">
     <h3>Q-Actions</h3>
   <!-- Plotly chart will be drawn inside this DIV -->
@@ -61,6 +70,10 @@
   </div>
 
   <div id="others" class="results">
+    <div id="used_policy" class="minions">
+      <h3>Executed Policy</h3>
+      <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+    </div>
     <div id="optimum" class="minions">
       <h3>Optimal policy</h3>
       <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
@@ -69,19 +82,29 @@
       <h3>Value Matrix</h3>
       <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
     </div>
-    <div id="used_policy" class="minions">
-      <h3>Executed Policy</h3>
-      <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
-    </div>
   </div>
 
   <div id = "pages">
     <div id="page_value" class="minions">
       <h3>Value of the Pages</h3>
-      <div id="PageValue" class ="Q" style="width:480px; height:400px;"></div>
+      <div id="PageValue" class ="Q" style="width:480px; height:400px;">
+        <table id="pagesTable">
+          <thead>
+            <tr id='actions'>
+              <!-- need to add actions dynamically -->
+
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+
+
+        </table>
+      </div>
     </div>
   </div>
-
+</div>
+</div>
 </body>
 
 <!-- setting up inputs -->
@@ -93,7 +116,7 @@
       var add_button = $("#update_reward_button");
 
       new_row = '<tr class="inputs"> \
-                    <td class="action"> <input type="text" name="mytext[]"  placeholder="Enter Action"/> </td> \
+                    <td class="action"> <input type="text" name="mytext[]"  placeholder="Enter Action" required> </td> \
                     <td class="down"><input type="number" value = "2"></td> \
                     <td class="right"><input type="number" value = "2" ></td> \
                     <td class="dead"><input type="number" value = "2" ></td> \
@@ -152,6 +175,14 @@
      for(i=MAX_ATSOP_ROWS; i>0; i--){
        y_labels.push(ATSOP_GAP*(i-1) + '-' + ATSOP_GAP*i)
      }
+
+    ACTIONS = Object.keys(out.action)
+    $("#pagesTable > thead > tr").empty()
+    $("#pagesTable > thead > tr").append("<th> Page </th>")
+    for(i in ACTIONS){
+      $("#pagesTable > thead > #actions").append('<th>'+ACTIONS[i]+'</th>')
+    }
+
 
      $.ajax({
        url:"http://0.0.0.0:9090/loadSetup",

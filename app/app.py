@@ -11,8 +11,6 @@ class setup(object):
     def save(self):
         json.dump(self.vars,open('./static/parameters.json', 'w'))
 
-
-
 class learnedObjectsVars(object):
     def __init__(self):
         self.vars = {}
@@ -39,15 +37,16 @@ class learnedObjectsVars(object):
             V[i] = _max[1]
             policy[i] = _max[0]
 
-    def hoardPageValue(self):
-        pass
+    def recordPageValue(self, url, prev_state, next_state, action):
+        if url not in self.vars['pages']:
+            self.vars['pages'][url] = {a:0 for a in setupVars.vars['ACTIONS']}
 
+        self.vars['pages'][url][action] += self.vars['V'][next_state] - self.vars['V'][prev_state]
 
 setupVars = setup()
 learnedObjects = learnedObjectsVars()
 
 from MDP_functions import * # update Q and track policy
-
 
 import random
 app = Flask(__name__)
@@ -87,15 +86,18 @@ def loadSetup():
     setupVars.vars['ALPHA'] =float(data['params']['ALPHA'])
 
     setupVars.save()
+
     ncells = setupVars.vars['MAX_ATSOP_ROWS'] * setupVars.vars['MAX_SD_COLS']
 
-    Q = {x+1:getActionDict(ACTIONS) for x in range( ncells )}
-    EXECUTED_POLICY = {x+1:getActionDict(ACTIONS) for x in range( ncells )}
+    ncells = [x for x in range(ncells)] + [999]
+    Q = {x+1:getActionDict(ACTIONS) for x in ncells}
+    EXECUTED_POLICY = {x+1:getActionDict(ACTIONS) for x in ncells}
 
     learnedObjects.vars['Q'] = Q
-    learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:'n' for x in range(ncells)}
-    learnedObjects.vars['V'] = {x+1: 0 for x in range(ncells)}
+    learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:'n' for x in ncells}
+    learnedObjects.vars['V'] = {x+1: 0 for x in ncells}
     learnedObjects.vars['EXECUTED_POLICY'] = EXECUTED_POLICY
+    learnedObjects.vars['pages'] =defaultdict(dict)
 
     learnedObjects.save()
 
@@ -123,14 +125,13 @@ def updates():
     for i in data['feedback']:
         learnedObjects.updateQ(i['prev_state'], i['next_state'], i['action'],i['reaction'])
         learnedObjects.recordPolicy(i['prev_state'], i['action'])
+        learnedObjects.recordPageValue(i['url'], i['prev_state'], i['next_state'], i['action'])
 
     # find out optimal policy & find out V
     learnedObjects.updateVandPolicy()
 
-    # update value of pages
-
     setupVars.save()
-    print learnedObjects.vars['Q']
+    learnedObjects.save()
 
     return "sdf"
 
@@ -148,7 +149,6 @@ def getQ():
                 break
         out[a] = out[a][::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
     return jsonify(out)
-
 
 @app.route('/getV')
 def getV():
@@ -191,7 +191,7 @@ def getUsedPolicy():
     for i in p:
         total = sum(p[i].values())
         _max= max(p[i].iteritems(), key=lambda x:x[1])
-        p[i] = (_max[0], round(1.0*_max[1]/(1+total),2))
+        p[i] = (_max[0], round(1.0*_max[1]/(1+total),1))
 
     out1,out2 = [],[]
     actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
@@ -201,7 +201,7 @@ def getUsedPolicy():
             for x in range(setupVars.vars['MAX_SD_COLS']):
                 a  = p[i+x*setupVars.vars['MAX_ATSOP_ROWS']]
                 tmp1.append(actions[a[0][0]])
-                tmp2.append(str(a[0][0])+ str(a[1]))
+                tmp2.append(str(a[0][0])+" "+ str(a[1]))
 
             out1.append(tmp1)
             out2.append(tmp2)
@@ -211,11 +211,12 @@ def getUsedPolicy():
     # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
     return jsonify({'policy' :out2, 'number':out1})
 
-
-
+@app.route('/getPages')
+def getPages():
+    return jsonify({'pages': learnedObjects.vars['pages']})
 
 if __name__ == "__main__":
-    news = json.load(open('./static/news.json'))
+    news = {'news': json.load(open('./static/news.json'))}
     user_data = json.load(open('userData.json'))
 
     app.run('0.0.0.0', 9090, debug=True)

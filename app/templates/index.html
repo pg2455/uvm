@@ -72,7 +72,7 @@
     {% endfor %}
   </div>
   <div id="frame">
-    <iframe id="actualIframe" src="" name="reader" onerror="error" allowfullscreen>
+    <iframe id="actualIframe" src=" " name="reader" onerror="error" allowfullscreen>
     </iframe>
   </div>
 
@@ -117,12 +117,16 @@
 
     // display news
     $.get("http://0.0.0.0:9090/getNews" , function(data){
+      URL = "http://0.0.0.0:9090/loadHome"
         news = data;
+        console.log("track url",URL)
       }, "json")
 
     // attach news to various options from the drop down menu
     $("#options").change(function() {
-      category = $(this).find("option:selected").attr('value');
+
+      category = $(this).find("option:selected").text().slice(1,100); // to remove the extra space from the start
+      URL = category
       $('#all-news').empty();
       str =""
       articles = news[category].value
@@ -134,6 +138,9 @@
 
       }
       $("#all-news").html(str)
+
+      trackClicks();
+
     });
 
     createGrid(MAX_ATSOP_ROWS, MAX_SD_COLS, WIDTH)

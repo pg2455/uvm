@@ -1,7 +1,6 @@
 def getActionDict(ACTIONS):
     return {x:0.0 for x in ACTIONS}
 
-
 def updateQ(prev_state, next_state, action, reaction):
 
     # update equation

@@ -5,7 +5,7 @@ import httplib, urllib, base64
 def getNews(category):
     headers = {
         # Request headers
-        'Ocp-Apim-Subscription-Key': 'c95d693162e046a98c616ae7fa3942ad',
+        'Ocp-Apim-Subscription-Key': 'ce9f46b167f24be4af64bec952f6976d',
     }
 
     params = urllib.urlencode({
