@@ -61,49 +61,48 @@
   <div id= "output">
     <div style="height: 60px;"> <button id="update_results" class= "btn2">Update</button></div>
 
-  <div id="Q" class="results">
-    <h3>Q-Actions</h3>
-  <!-- Plotly chart will be drawn inside this DIV -->
-  <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
-  <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
-  <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
-  </div>
-
-  <div id="others" class="results">
-    <div id="used_policy" class="minions">
-      <h3>Executed Policy</h3>
-      <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+    <div id="Q" class="results">
+      <h3>Q-Actions</h3>
+      <!-- Plotly chart will be drawn inside this DIV -->
+      <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
+      <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
+      <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
     </div>
-    <div id="optimum" class="minions">
-      <h3>Optimal policy</h3>
-      <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+
+    <div id="others" class="results">
+      <div id="used_policy" class="minions">
+        <h3>Executed Policy</h3>
+        <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+      </div>
+      <div id="optimum" class="minions">
+        <h3>Optimal policy</h3>
+        <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+      </div>
+      <div id="value" class= "minions">
+        <h3>Value Matrix</h3>
+        <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
+      </div>
     </div>
-    <div id="value" class= "minions">
-      <h3>Value Matrix</h3>
-      <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
-    </div>
-  </div>
 
-  <div id = "pages">
-    <div id="page_value" class="minions">
-      <h3>Value of the Pages</h3>
-      <div id="PageValue" class ="Q" style="width:480px; height:400px;">
-        <table id="pagesTable">
-          <thead>
-            <tr id='actions'>
-              <!-- need to add actions dynamically -->
-
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
+    <div id = "pages">
+      <div id="page_value" class="minions">
+        <h3>Value of the Pages</h3>
+        <div id="PageValue" class ="Q" style="width:480px; height:400px;">
+          <table id="pagesTable">
+            <thead>
+              <tr id='actions'>
+                <!-- need to add actions dynamically -->
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
 
 
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </div>
 </body>
 
