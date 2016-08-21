@@ -19,8 +19,6 @@ function recordFeedback(cell, action, reaction){
         drawDot('left', action)
         FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
-
-
   }else{
     next_cell = 1000
     FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
