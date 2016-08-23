@@ -84,7 +84,7 @@ function drawHeatMap(div, Q, action, legend,x,y,z_annot = 0){
     x:x,
     y:y,
     //custom colorscale; this makes sure different maps are on same scale
-    colorscale: [[-3, 'rgb(166,206,227)'], [-2, 'rgb(31,120,180)'], [-1, 'rgb(178,223,138)'], [1, 'rgb(51,160,44)'], [2, 'rgb(251,154,153)'], [3, 'rgb(227,26,28)']],
+    colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']],
     //grey colorscale
     // colorscale: 'Greys',
 

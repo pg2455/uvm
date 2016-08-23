@@ -4,8 +4,9 @@ function recordFeedback(cell, action, reaction){
       if(CELL >= MAX_ATSOP_ROWS*SD){
         next_cell = cell
       }else{
-        next_cell = cell + 1
         drawDot('top', action)
+        next_cell = cell + 1
+
         FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
   }else if(reaction == 'right'){
@@ -14,9 +15,10 @@ function recordFeedback(cell, action, reaction){
         // no reaction
         next_cell = cell
       }else{
+        drawDot('left', action)
         SD += 1
         next_cell = cell + MAX_ATSOP_ROWS
-        drawDot('left', action)
+
         FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
   }else{
@@ -26,7 +28,7 @@ function recordFeedback(cell, action, reaction){
     $.ajax({
       url: "http://0.0.0.0:9090/feedback",
       contentType: 'application/json; charset=UTF-8',
-      data: JSON.stringify({feedback: FEEDBACK}),
+      data: JSON.stringify({feedback1 : FEEDBACK}),
       type:"POST",
     });
 

@@ -12,7 +12,7 @@ function chooseAction(prob){
 
 // takes actions, observes reaction, sends feedback to stateTracker
 function takeAction(action){
-
+  stumble = false
   if(action.toLowerCase()!='nothing'){
     controller('stop',action)
     console.log('Taking action', action)
@@ -21,9 +21,16 @@ function takeAction(action){
       timeout:4000,
       onUnblock: function(){
         $('#question h1').first().remove();
-        reaction = 'down'
-        controller('start',reaction)
+        if(stumble == true){
+          reaction = 'right'
+        }else{
+          reaction = 'down'
+        }
+        stumble = false
 
+        console.log(reaction)
+        controller('start',reaction)
+        // msgIdChanged = true
       }
     });
 
@@ -38,11 +45,14 @@ function takeAction(action){
     })
 
     $("#random").click(function(){
-      reaction = 'right'
-      controller('start', reaction)
       url = stumbleUpon()
       URL = url
+      stumble= true
       $.unblockUI();
+      // if(msgIdChanged == false){
+      //   $('#question h1').first().remove();
+      // }
+      // msgIdChanged = false
       document.getElementById('actualIframe').setAttribute('src', url)
     })
 

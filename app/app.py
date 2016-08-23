@@ -39,9 +39,10 @@ class learnedObjectsVars(object):
 
     def recordPageValue(self, url, prev_state, next_state, action):
         if url not in self.vars['pages']:
-            self.vars['pages'][url] = {a:0 for a in setupVars.vars['ACTIONS']}
+            self.vars['pages'][url] = {a: {'sum':0, 'obs':0} for a in setupVars.vars['ACTIONS']}
 
-        self.vars['pages'][url][action] += self.vars['V'][next_state] - self.vars['V'][prev_state]
+        self.vars['pages'][url][action]['sum'] +=  self.vars['V'][prev_state] + self.vars['V'][next_state]
+        self.vars['pages'][url][action]['obs'] += 1
 
 setupVars = setup()
 learnedObjects = learnedObjectsVars()
@@ -119,10 +120,10 @@ def home():
 @app.route('/feedback', methods=['POST'])
 def updates():
     data = request.json # it has prev_state,next_state, action, reaction
-    print data['feedback']
+    print data['feedback1']
 
     # update Q
-    for i in data['feedback']:
+    for i in data['feedback1']:
         learnedObjects.updateQ(i['prev_state'], i['next_state'], i['action'],i['reaction'])
         learnedObjects.recordPolicy(i['prev_state'], i['action'])
         learnedObjects.recordPageValue(i['url'], i['prev_state'], i['next_state'], i['action'])
@@ -213,7 +214,12 @@ def getUsedPolicy():
 
 @app.route('/getPages')
 def getPages():
-    return jsonify({'pages': learnedObjects.vars['pages']})
+    out = {}
+    pages = learnedObjects.vars['pages']
+    actions = setupVars.vars['ACTIONS']
+    for i in pages:
+        out[i]  = {action: 1.0*pages[i][action]['sum']/ (1+pages[i][action]['obs']) for action in actions}
+    return jsonify({'pages': out })
 
 if __name__ == "__main__":
     news = {'news': json.load(open('./static/news.json'))}

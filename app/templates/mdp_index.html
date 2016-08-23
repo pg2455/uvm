@@ -190,8 +190,8 @@
 
        contentType:"application/json",
        success:function(response) {
-        //  var newWindow =  window.open("", "_blank");
-        //  newWindow.location.href=response;
+         var newWindow =  window.open("", "_blank");
+         newWindow.location.href=response;
         updatePlots(x_labels, y_labels)
        }
      });
