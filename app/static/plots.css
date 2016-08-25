@@ -13,7 +13,7 @@
 }
 
 #value{
-  margin-left:80px;
+  /*margin-left:80px;*/
 }
 #used_policy{
   margin-left:0px;
@@ -23,6 +23,8 @@
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
     width: 100%;
+    position:absolute;
+    top:1600px;
 }
 
 
@@ -61,19 +63,77 @@
 
 #update_results{
   right:44%;
-  top:41%;
+  top:42%;
 
 }
 
 #update_reward_button{
   right:44%;
-  top:22%;
+  top:21.5%;
 }
 
-#input{
+#clv{
+  position:absolute;
+  float:left;
+  /*top:540px;*/
+  left:100px;
+  /*display:inline-block;*/
+  outline:green dotted thick;
+  width:1200px;
+  height:210px;
 
 }
 
-#output{
+#N{
+  position:absolute;
+  top:10px;
+  left:400px;
+  font-size: x-large;
+}
+#multiply1{
+    top: 10px;
+    left: 500px;
+    position: absolute;
+    font-size: x-large;
+}
+#similarity{
+  position: absolute;
+  left: 600px;
+  top: 10px;
+  font-size: x-large;
+}
 
+#multiply2{
+    top: 10px;
+    left: 850px;
+    position: absolute;
+    font-size: x-large;
+}
+
+#V1{
+    position: absolute;
+    top: 10px;
+    left: 900px;
+    font-size: x-large;
+}
+
+#equal{
+  position:absolute;
+  top:40px;
+  left:1000px;
+  font-size: x-large;
+}
+
+
+#rhs{
+    position: absolute;
+    top: 40px;
+    left: 1100px;
+    font-size:x-large
+}
+
+#lhs{
+  top:40px;
+  font-size:x-large;
+  position:absolute;
 }

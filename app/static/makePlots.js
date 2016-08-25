@@ -24,6 +24,13 @@ function updatePlots(x_labels, y_labels){
     url:'/getV',
     type:"GET",
     success:function(data){
+
+      value1 = data.value
+      console.log(value1, data.V)
+      value = MathJax.Hub.getAllJax("value_user")[0];
+      QUEUE.Push(["Text", value, "$"+round(value1, 2) ])
+      updateValue(parseFloat($("#N_in").attr('value')))
+
       div = 'VDiv'
       drawHeatMap(div, data['V'],'Value Matrix', true ,x_labels, y_labels)
     }
@@ -35,8 +42,13 @@ function updatePlots(x_labels, y_labels){
     url:'/getPolicy',
     type:"GET",
     success:function(data){
+      if(data['SARSA'] == true){
+        title = 'SARSA Optimal Policy'
+      }else{
+        title = 'Locally Optimal Policy'
+      }
       div = 'OPolicyDiv'
-      drawHeatMap(div, data['number'],'Optimal Policy', true ,x_labels, y_labels, data['policy'])
+      drawHeatMap(div, data['number'],title, true ,x_labels, y_labels, data['policy'])
     }
   });
 
@@ -69,6 +81,20 @@ function updatePlots(x_labels, y_labels){
           }
         }
 
+    }
+  });
+
+  //draw optimal V
+  $.ajax({
+    dataType:'json',
+    url:'/getOptV',
+    type:"GET",
+    success:function(data){
+
+      if(data['OptV'].length != 0){
+        div = 'OVDiv'
+        drawHeatMap(div, data['OptV'],'Optimal Value Matrix', true ,x_labels, y_labels)
+      }
     }
   });
 

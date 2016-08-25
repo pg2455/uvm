@@ -214,7 +214,7 @@ function endSession(label){
   //close after 2 seconds
   setTimeout(function(){
     window.location.href = "http://0.0.0.0:9090/"
-  }, 3000)
+  }, 2000)
 
 
 }

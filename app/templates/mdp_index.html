@@ -6,6 +6,10 @@
   <!-- Plotly.js -->
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src= "http://code.jquery.com/jquery-latest.min.js"></script>
+  <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  </script>
 </head>
 
 <body>
@@ -25,89 +29,137 @@
     <div id= "input">
       <button id="update_reward_button" class= "btn2">Add Action/Rewards</button>
 
-    <table id= "rewards" class="display" cellspacing="0" width="100%">
-        <tr>
-          <td><strong>Actions/Reactions</strong></td>
-          <td><strong>down ($ Increase in time spent)</strong></td>
-          <td><strong>right ($ Increase in #pageviews)<strong></td>
-          <td><strong>dead ($ User left)<strong></td>
-          <td><strong>Use rate<strong></td>
-        </tr>
-        <tr class="inputs">
-          <td class="action"><input type="text" value="nothing"></td>
-          <td class="down"><input type="number" value="2"></td>
-          <td class="right"><input type="number" value="2"></td>
-          <td class="dead"><input type="number" value="2"></td>
-          <td class="use_rate"><input type="number" value="0.6"></td>
-        </tr>
-    </table>
+      <table id= "rewards" class="display" cellspacing="0" width="100%">
+          <tr>
+            <td><strong>Actions/Reactions</strong></td>
+            <td><strong>down ($ Increase in time spent)</strong></td>
+            <td><strong>right ($ Increase in #pageviews)<strong></td>
+            <td><strong>dead ($ User left)<strong></td>
+            <td><strong>Use rate<strong></td>
+          </tr>
+          <tr class="inputs">
+            <td class="action"><input type="text" value="nothing"></td>
+            <td class="down"><input type="number" value="2"></td>
+            <td class="right"><input type="number" value="2"></td>
+            <td class="dead"><input type="number" value="2"></td>
+            <td class="use_rate"><input type="number" value="0.6"></td>
+          </tr>
+      </table>
 
-    <br><br>ALPHA:
-    <input type="number" class="vars" name="ALPHA" value=0.5>
-    &ensp; GAMMA:
-    <input type="number" class="vars" name="GAMMA" value=0.5>
-      &ensp;MAX_ATSOP_ROWS:
-    <input type="number" class="vars" name="MAX_ATSOP_ROWS" value=10>
-    &ensp; MAX_SD_COLS:
-    <input type="number" class="vars" name="MAX_SD_COLS" value=5>
-    &ensp; ATSOP_GAP(seconds):
-    <input type="number" class="vars" name="ATSOP_GAP" value=2>
+      <br><br>ALPHA:
+      <input type="number" class="vars" name="ALPHA" value=0.5>
+      &ensp; GAMMA:
+      <input type="number" class="vars" name="GAMMA" value=0.5>
+        &ensp;MAX_ATSOP_ROWS:
+      <input type="number" class="vars" name="MAX_ATSOP_ROWS" value=10>
+      &ensp; MAX_SD_COLS:
+      <input type="number" class="vars" name="MAX_SD_COLS" value=5>
+      &ensp; ATSOP_GAP(seconds):
+      <input type="number" class="vars" name="ATSOP_GAP" value=2>
     </div>
 
-  <div>
-    <hr>
-  </div>
-
-  <div id= "output">
-    <div style="height: 60px;"> <button id="update_results" class= "btn2">Update</button></div>
-
-    <div id="Q" class="results">
-      <h3>Q-Actions</h3>
-      <!-- Plotly chart will be drawn inside this DIV -->
-      <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
-      <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
-      <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
+    <div>
+      <hr>
     </div>
 
-    <div id="others" class="results">
-      <div id="used_policy" class="minions">
-        <h3>Executed Policy</h3>
-        <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
-      </div>
-      <div id="optimum" class="minions">
-        <h3>Optimal policy</h3>
-        <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
-      </div>
-      <div id="value" class= "minions">
-        <h3>Value Matrix</h3>
-        <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
-      </div>
-    </div>
+    <div id= "output">
+      <div style="height: 60px;"> <button id="update_results" class= "btn2">Update</button></div>
 
-    <div id = "pages">
-      <div id="page_value" class="minions">
-        <h3>Value of the Pages</h3>
-        <div id="PageValue" class ="Q" style="width:480px; height:400px;">
-          <table id="pagesTable">
-            <thead>
-              <tr id='actions'>
-                <!-- need to add actions dynamically -->
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
+      <div id="Q" class="results">
+        <h3>Q-Actions</h3>
+        <!-- Plotly chart will be drawn inside this DIV -->
+        <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
+        <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
+        <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
+      </div>
 
+      <hr style="border-top: dotted 1px;" />
 
-          </table>
+      <div id="others" class="results">
+        <div id="used_policy" class="minions">
+          <h3>Executed Policy</h3>
+          <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+        </div>
+        <div id="optimum" class="minions">
+          <h3>Optimal policy</h3>
+          <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+        </div>
+        <div id="value" class= "minions">
+          <h3>Value Matrix</h3>
+          <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
+        </div>
+        <div id="value" class= "minions">
+          <h3>Optimal Value Matrix</h3>
+          <div id="OVDiv" class ="Q" style="width:480px; height:400px;"></div>
         </div>
       </div>
+
+      <hr style="border-top: dotted 1px;" />
+
+      <div id ='clv' class="results">
+        <div id ='lhs'>
+        <br><br>$Value\ of\ the\ User\ (\ t\ =\ 1\ month):$
+        </div>
+          <div id= 'N'>
+            $\ \ \ N(t)$ <br><br><br>
+            $\ $<input id="N_in" type="number" name="N" value="10" style="width: 45px; border-color:black; text-align:right; height:30px; font-size:15px;" onchange="updateValue(this.value)">
+          </div>
+
+          <div id='multiply1'>
+            $*$
+          </div>
+
+          <div id ='similarity'>
+            $Segment\ Similarity$<br><br>
+            $direct\ \ :\ 1.0$<br><br>
+            $search\ :\ 0.0$<br><br>
+            $social\ \ :\ 0.0$<br><br>
+          </div>
+
+          <div id='multiply2'>
+            $*$
+          </div>
+
+          <div id="V1">
+            $V(1)$<br><br>
+            <div id="value_user">$\${}$</div><br>
+            $\$0.0$<br><br>
+            $\$0.0$<br><br>
+          </div>
+          <div id="equal">
+            <br><br>$=$
+          </div>
+          <div id='rhs'>
+            <br><br>$\${}$
+          </div>
+      </div>
+
+      <div id = "pages" class="results">
+        <div id="page_value" class="minions">
+          <h3>Value of the Pages</h3>
+          <div id="PageValue" class ="Q" style="width:480px; height:400px;">
+            <table id="pagesTable">
+              <thead>
+                <tr id='actions'>
+                  <!-- need to add actions dynamically -->
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+
+
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 </body>
 
 <!-- setting up inputs -->
   <script>
+
     $(document).ready(function() {
       var table = $('rewards')
       var max_fields = 3;
@@ -182,19 +234,18 @@
       $("#pagesTable > thead > #actions").append('<th>'+ACTIONS[i]+'</th>')
     }
 
+    $.ajax({
+      url:"http://0.0.0.0:9090/loadSetup",
+      type: "POST",
+      data:JSON.stringify(out),
 
-     $.ajax({
-       url:"http://0.0.0.0:9090/loadSetup",
-       type: "POST",
-       data:JSON.stringify(out),
-
-       contentType:"application/json",
-       success:function(response) {
-         var newWindow =  window.open("", "_blank");
-         newWindow.location.href=response;
+      contentType:"application/json",
+      success:function(response) {
+        var newWindow =  window.open("", "_blank");
+        newWindow.location.href=response;
         updatePlots(x_labels, y_labels)
-       }
-     });
+      }
+    });
 
    }
 
@@ -208,6 +259,23 @@
    $("#update_results").click(function(){
      updatePlots(x_labels, y_labels)
    })
+
+   var QUEUE = MathJax.Hub.queue;
+   var money = null;
+   var value = null;
+   QUEUE.Push(function () {
+     money = MathJax.Hub.getAllJax("rhs")[0];
+     value = MathJax.Hub.getAllJax("value_user")[0];
+   });
+
+   window.updateValue = function(N) {
+     var value = parseFloat(MathJax.Hub.getAllJax("value_user")[0].originalText.slice(1))
+     console.log(value, N)
+     QUEUE.Push(["Text", money, "\\displaystyle{$"+ round(value*N, 2) + "}" ])
+   }
+
+  //  QUEUE.Push(["Text", value, "$0.0"])
+
  </script>
 
 </html>
