@@ -1,5 +1,5 @@
 from flask import Response, Flask, request, jsonify, render_template, make_response, url_for,redirect, send_from_directory
-import json
+import json, copy
 # from flask.ext.socketio import SocketIO, emit
 from collections import defaultdict
 from flask_sockets import Sockets
@@ -15,6 +15,9 @@ class setup(object):
 
 class learnedObjectsVars(object):
     def __init__(self):
+        self.init()
+
+    def init(self):
         self.vars = {}
         self.vars['OPTIMAL_Q'] = {}
         self.vars['OPTIMAL_V'] = {}
@@ -29,11 +32,15 @@ class learnedObjectsVars(object):
         Q[prev_state][action] = Q[prev_state][action] + \
                     setupVars.vars['ALPHA'] *( setupVars.vars['REACTION_REWARD'][action][reaction] + setupVars.vars['GAMMA']* max(Q[next_state].itervalues()) - Q[prev_state][action] )
 
+    def updateV(self, prev_state, next_state, action, reaction):
+        V = self.vars['V']
+        V[prev_state] = V[prev_state] +setupVars.vars['ALPHA']*(setupVars.vars['REACTION_REWARD'][action][reaction] + setupVars.vars['GAMMA']*V[next_state] - V[prev_state])
+
     def recordPolicy(self, prev_state, action):
         self.vars['EXECUTED_POLICY'][prev_state][action]+=1
 
     def updateVandPolicy(self):
-        self.vars['OPTIMAL_POLICY'], self.vars['V'] = optimizePolicy(self.vars['Q'])
+        self.vars['OPTIMAL_POLICY'], _ = optimizePolicy(self.vars['Q'])
 
     def recordPageValue(self, url, prev_state, next_state, action):
         if url not in self.vars['pages']:
@@ -51,13 +58,13 @@ class learnedObjectsVars(object):
 
     def getSARSAOptimizedPolicy(self, epsilon, iterations):
         current_policy = self.vars['OPTIMAL_POLICY'].copy()
-        Q = self.vars['Q'].copy()
+        Q = copy.deepcopy(self.vars['Q'])
         P = self.vars['transitionProbs']
 
         #simulation of several episodes
         print "Optimizing using SARSA"
         for i in range(iterations):
-            print i
+            ignoreATSOPDead, ignoreSDDead = False, False
             #episode
             s0 = 1
             action0 = decideAction(current_policy[s0], setupVars.vars['ACTIONS'], epsilon)
@@ -66,14 +73,32 @@ class learnedObjectsVars(object):
                 reward = setupVars.vars['REACTION_REWARD'][action0][reaction]
                 s1 = getNewCell(s0, reaction)
                 if s1 ==s0:
-                    continue
+                    if reaction == 'down':
+                        if not ignoreATSOPDead:
+                            ignoreATSOPDead = True
+                        else:
+                            continue
+
+                    elif reaction == 'right':
+                        if not ignoreSDDead:
+                            ignoreSDDead = True
+                        else:
+                            continue
+                    else:
+                        continue
+
+                if s1!=s0 and ignoreSDDead == True:
+                    ignoreSDDead = False
+                if s1!=s0 and ignoreATSOPDead == True:
+                    ignoreATSOPDead = False
+
                 action1 = decideAction(current_policy[s1], setupVars.vars['ACTIONS'], epsilon)
 
                 Q[s0][action0] = Q[s0][action0] + setupVars.vars['ALPHA'] * (reward + setupVars.vars['GAMMA']* Q[s1][action1] - Q[s0][action0])
-                print s0, '-->', s1
+                # print s0, '-->', s1
                 s0 = s1
                 action0 = action1
-            print '------------------'
+            # print '------------------'
 
         current_policy, V  = optimizePolicy(Q)
         self.vars['OPTMAL_Q'] = Q
@@ -112,10 +137,11 @@ def getNewCell(s,reaction):
     if reaction == 'dead':
         return 1000
 
-    if s % setupVars.vars['MAX_ATSOP_ROWS'] == 0 :
+    if s % setupVars.vars['MAX_ATSOP_ROWS'] == 0:
         if reaction == 'down':
             return s
-    if 1 + s/setupVars.vars['MAX_ATSOP_ROWS'] >= setupVars.vars['MAX_SD_COLS']:
+
+    if 1 + (s-1)/setupVars.vars['MAX_ATSOP_ROWS'] >= setupVars.vars['MAX_SD_COLS']:
         if reaction == 'right':
             return s
 
@@ -147,7 +173,11 @@ def getNews():
 
 @app.route('/loadSetup', methods=['POST'])
 def loadSetup():
+    print "\nSetting up parameters ... \n"
     json.dump( {},open('userData.json','w'))
+
+    setupVars.vars = {}
+    learnedObjects.init()
 
     data = request.json
 
@@ -202,14 +232,29 @@ def home():
 
 @app.route('/feedback', methods=['POST'])
 def updates():
+    ignoreDead = False
     data = request.json # it has prev_state,next_state, action, reaction
-
+    print data
     # update Q
-    for i in data['feedback1']:
+    nobs = len(data['feedback1'])
+    for x,i in enumerate(data['feedback1']):
+
+        # there are thre cases -  dot at atsop boundary ; dot at sd boundary; dot at the corner
+        # in first two the 2nd last will satisfy the condition below.
+        # last one might have thrid last and second last with same next and prev state
+        # in that case it will update using  third observation but satidfy the condition below
+        # at the second last and ignore the dead state will be ignored
+        if i['prev_state'] == i['next_state'] and x == nobs-2 :
+            ignoreDead = True
+
+        if x == nobs -1  and ignoreDead:
+            continue
+
         learnedObjects.updateQ(i['prev_state'], i['next_state'], i['action'],i['reaction'])
         learnedObjects.recordPolicy(i['prev_state'], i['action'])
         learnedObjects.recordPageValue(i['url'], i['prev_state'], i['next_state'], i['action'])
         learnedObjects.recordTransitionProbs(i['prev_state'], i['action'], i['reaction'])
+        learnedObjects.updateV(i['prev_state'], i['next_state'], i['action'],i['reaction'])
 
     # find out optimal policy & find out V
     learnedObjects.updateVandPolicy()
@@ -314,9 +359,9 @@ def getPages():
 
 @app.route('/getOptV')
 def getOptV():
-    out = []
+    out = [[0 for x in range(setupVars.vars['MAX_SD_COLS'])] for y in  range(setupVars.vars['MAX_ATSOP_ROWS']) ]
     if learnedObjects.readyForSARSA():
-
+        out  = []
         for i in learnedObjects.vars['OPTIMAL_V']:
             if i <= setupVars.vars['MAX_ATSOP_ROWS']:
                 row = [ learnedObjects.vars['OPTIMAL_V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
@@ -324,7 +369,7 @@ def getOptV():
             else:
                 break
         out =  out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    print out
+    # print out
     return jsonify({'OptV' :out})
 
 if __name__ == "__main__":

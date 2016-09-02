@@ -1,27 +1,61 @@
+var sessionEnded = false;
+var ATSOPboundary = false;
+var SDboundary = false;
 function recordFeedback(cell, action, reaction){
+  URL  = 'exp'
   // console.log("record feedback", cell,action, reaction, "end")
   if(reaction == 'down'){
-      if(CELL >= MAX_ATSOP_ROWS*SD){
+      if(CELL > MAX_ATSOP_ROWS*SD){
         next_cell = cell
       }else{
-        drawDot('top', action)
-        next_cell = cell + 1
-
+        if(CELL == MAX_ATSOP_ROWS*SD){
+          if(!ATSOPboundary){
+            console.log("ATSOP Boundary ", CELL)
+            ATSOPboundary = true;
+            next_cell = cell
+            console.log('down here SD, cell = ', SD, cell)
+          }else{
+            console.log("trying to go out of atsop boundary")
+            return
+          }
+        }else{
+          drawDot('top', action)
+          next_cell = cell + 1
+          if(SDboundary){
+            SDboundary = false;
+          }
+        }
         FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
   }else if(reaction == 'right'){
 
-      if(SD >= MAX_SD_COLS){
+      if(SD > MAX_SD_COLS){
         // no reaction
         next_cell = cell
       }else{
-        drawDot('left', action)
-        SD += 1
-        next_cell = cell + MAX_ATSOP_ROWS
-
+        if(SD == MAX_SD_COLS){
+          if(!SDboundary){
+            console.log('here', SD)
+            next_cell = cell
+            SDboundary = true;
+          }else{
+            console.log("trying to go out of SD boundary")
+            return
+          }
+        }else{
+          SD += 1
+          if(ATSOPboundary){
+            console.log('right here SD, cell = ', SD, cell)
+            ATSOPboundary=false;
+          }
+          drawDot('left', action)
+          next_cell = cell + MAX_ATSOP_ROWS
+        }
         FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
       }
   }else{
+    if(sessionEnded) return;
+    sessionEnded = true;
     next_cell = 1000
     FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
     controller('stop','nothing')
@@ -44,7 +78,7 @@ function activateCounter(){
 
 
       ATSOP +=ATSOP_GAP
-      if (CELL < MAX_ATSOP_ROWS*SD ){
+      if (CELL <= MAX_ATSOP_ROWS*SD ){
         recordFeedback(CELL,'nothing', 'down') // first execcution takes place after interval.
         // when the atsop_gap time is done it crosses that cell
         // hence record feedback at that instant
@@ -53,11 +87,11 @@ function activateCounter(){
       }
 
 
-      // this will be separate but for demo it is here
-      if(CELL%2==0){
+      // even rows (CELL%MAX_ATSOP_ROWS)%2==0
+      // if(CELL==2 || CELL ==5 || CELL ==8){
         action = chooseAction(ACTION_PROB)
         takeAction(action)
-      }
+      // }
 
   }, ATSOP_GAP*1000)
   return counter

@@ -13,7 +13,8 @@ function updatePlots(x_labels, y_labels){
         drawHeatMap(div, data[i], i, count == Object.keys(data).length-1,x_labels, y_labels)
         count+=1
       }
-    }
+    },
+    cache:false
   });
 
 
@@ -33,7 +34,8 @@ function updatePlots(x_labels, y_labels){
 
       div = 'VDiv'
       drawHeatMap(div, data['V'],'Value Matrix', true ,x_labels, y_labels)
-    }
+    },
+    cache:false
   });
 
   // draw policy
@@ -49,7 +51,8 @@ function updatePlots(x_labels, y_labels){
       }
       div = 'OPolicyDiv'
       drawHeatMap(div, data['number'],title, true ,x_labels, y_labels, data['policy'])
-    }
+    },
+    cache:false
   });
 
   // draw used policy
@@ -60,7 +63,8 @@ function updatePlots(x_labels, y_labels){
     success:function(data){
       div = 'UPolicyDiv'
       drawHeatMap(div, data['number'],'Used Policy', true ,x_labels, y_labels, data['policy'])
-    }
+    },
+    cache:false
   });
 
   // display pages and values
@@ -80,8 +84,8 @@ function updatePlots(x_labels, y_labels){
             parent.append('<td>' + pages[i][ACTIONS[a]] + '</td>')
           }
         }
-
-    }
+    },
+    cache:false
   });
 
   //draw optimal V
@@ -94,8 +98,11 @@ function updatePlots(x_labels, y_labels){
       if(data['OptV'].length != 0){
         div = 'OVDiv'
         drawHeatMap(div, data['OptV'],'Optimal Value Matrix', true ,x_labels, y_labels)
+      }else{
+        $("#ODiv").empty()
       }
-    }
+    },
+    cache:false
   });
 
 }

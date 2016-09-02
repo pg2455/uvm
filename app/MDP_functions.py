@@ -102,21 +102,3 @@ def optimize(Q,P, epsilon):
         # print "_______________________"
 
     # several episodes
-
-
-def getNewCell(s,reaction):
-    if reaction == 'dead':
-        return 1000
-
-    if s % setupVars.vars['MAX_ATSOP_ROWS'] == 0 :
-        if reaction == 'down':
-            return s
-    if 1 + s/setupVars.vars['MAX_ATSOP_ROWS'] > setupVars.vars['MAX_SD_COLS']:
-        if reaction == 'right':
-            return s
-
-    if reaction == 'right':
-        return s + setupVars.vars['MAX_ATSOP_ROWS']
-
-    if reaction == 'down':
-        return s + 1

@@ -33,10 +33,6 @@
       cache:false
     })
 
-      // $.getJSON('./static/parameters.json', function(json){
-      //   PARAMETERS=json;
-      //   console.log(json)
-      // });
 
       MAX_ATSOP_ROWS = PARAMETERS['MAX_ATSOP_ROWS'];
       MAX_SD_COLS = PARAMETERS['MAX_SD_COLS'];
@@ -109,10 +105,6 @@
 
   <script type="text/javascript">
 
-    // MAX_SD_COLS = 3
-    // MAX_ATSOP_ROWS = 10
-    // ATSOP_GAP=2 // seconds
-    //
     FEEDBACK= []
     ATSOP = 0
     SD = 1
@@ -129,7 +121,6 @@
     $.get("http://0.0.0.0:9090/getNews" , function(data){
       URL = "http://0.0.0.0:9090/loadHome"
         news = data;
-        console.log("track url",URL)
       }, "json")
 
     // attach news to various options from the drop down menu
