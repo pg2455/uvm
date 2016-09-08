@@ -74,15 +74,18 @@ function updatePlots(x_labels, y_labels){
     type:"GET",
     success:function(data){
         pages = data['pages']
+        console.log(pages)
         $('#pagesTable > tbody').empty()
         for(i in pages){
-          parent  = $('<tr/>').appendTo('#pagesTable > tbody')
-
-          parent.append('<td>'+ i + '</td>')
-          for(a in ACTIONS){
-
-            parent.append('<td>' + pages[i][ACTIONS[a]] + '</td>')
+          for(sd in pages[i]){
+            parent  = $('<tr/>').appendTo('#pagesTable > tbody')
+            parent.append('<td>'+ i + '</td>')
+            parent.append('<td>' + sd + '</td>')
+            for(a in ACTIONS){
+              parent.append('<td>' + pages[i][sd][ACTIONS[a]] + '</td>')
+            }
           }
+
         }
     },
     cache:false
@@ -114,10 +117,13 @@ function drawHeatMap(div, Q, action, legend,x,y,z_annot = 0){
     // z: [[1,2,3],[3,2,1]],
 
     z: Q,
+    zmin:-1,
+    zmax:1,
     x:x,
     y:y,
     //custom colorscale; this makes sure different maps are on same scale
-    colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']],
+    colorscale: [[0, 'rgb(227,26,28)'], [0.25, 'rgb(251,154,153)'], [0.45, 'rgb(51,160,44)'], [0.65,'rgb(178,223,138)' ], [0.85,'rgb(31,120,180)' ], [1,'rgb(166,206,227)' ]],
+
     //grey colorscale
     // colorscale: 'Greys',
 

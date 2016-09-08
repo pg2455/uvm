@@ -11,12 +11,28 @@
 </head>
 
 <body>
+  <form id ='source'>
+    <input type="radio" name="source" value="direct" checked> Direct - {{direct}} <br>
+    <input type="radio" name="source" value="search"> Search - {{search}}<br>
+    <input type="radio" name="source" value="social"> Social - {{social}}
+  </form>
   <button id="start-button" onClick="loadHome()" type="button">Start Session</button>
   <script type="text/javascript">
   checkCookie();
 
     function loadHome() {
-      window.location.href = 'http://0.0.0.0:9090/loadHome'
+      SOURCE = $('input[name=source]:checked').val();
+
+      $.ajax({
+        url: '/initiateSession',
+        contentType: 'application/json; charset=UTF-8',
+        data:JSON.stringify({source:SOURCE}),
+        type:'POST',
+        success:function(data){
+          window.location.href = 'http://0.0.0.0:9090/loadHome'
+        }
+      });
+      // window.location.href = 'http://0.0.0.0:9090/loadHome'
     };
 
   </script>

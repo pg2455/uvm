@@ -13,42 +13,62 @@ function chooseAction(prob){
 // takes actions, observes reaction, sends feedback to stateTracker
 function takeAction(action){
   stumble = false
+  var x = 0;
   if(action.toLowerCase()!='nothing'){
     controller('stop',action)
     console.log('Taking action', action)
     $.blockUI({
       message : $('#question').prepend('<h1>'+action+'</h1>'),
-      timeout:4000,
+      timeout:5000,
       onUnblock: function(){
-        $('#question h1').first().remove();
-        if(stumble == true){
-          reaction = 'right'
-        }else{
-          reaction = 'down'
+        if(x>0){
+          return;
         }
-        stumble = false
-
-        console.log(reaction)
+        x++
+        reaction = 'down'
         controller('start',reaction)
+        console.log('normal unblocking')
+        $('#question h1').first().remove();
         // msgIdChanged = true
       }
     });
 
-    $('#yes').click(function() {
+    $('#yes').click(function() { // skip
+        if(x>0){
+          return;
+        }
+
+        x++;
+        reaction = 'down'
+        controller('start',reaction)
         $.unblockUI(); // this goes to above onUnblock control
+        $('#question h1').first().remove();
+
     });
 
-    $("#no").click(function(){
-      $.unblockUI();
+    $("#no").click(function(){ // end session
+      if(x>0){
+        return;
+      }
+      console.log(x)
+      x++;
       reaction = 'dead'
       controller('start',reaction)
+      $.unblockUI();
+      $('#question h1').first().remove();
     })
 
-    $("#random").click(function(){
+    $("#random").click(function(){ // stumble upon
+      if(x>0){
+        return;
+      }
+      x++;
       url = stumbleUpon()
       URL = url
-      stumble= true
+      reaction = 'right'
+      controller('start',reaction)
       $.unblockUI();
+      $('#question h1').first().remove();
       // if(msgIdChanged == false){
       //   $('#question h1').first().remove();
       // }

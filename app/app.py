@@ -13,6 +13,18 @@ class setup(object):
         json.dump(self.vars, tmp)
         tmp.close()
 
+class userSourceData(object):
+    def __init__(self):
+        self.source ={'search':0, 'social':0, 'direct':0}
+        self.currentSource = 'direct'
+
+    def recordSource(self, source):
+        self.source[source]+=1
+
+class segmentData(object):
+    def __init__(self):
+        self.vars = {}
+
 class learnedObjectsVars(object):
     def __init__(self):
         self.init()
@@ -42,12 +54,15 @@ class learnedObjectsVars(object):
     def updateVandPolicy(self):
         self.vars['OPTIMAL_POLICY'], _ = optimizePolicy(self.vars['Q'])
 
-    def recordPageValue(self, url, prev_state, next_state, action):
+    def recordPageValue(self, url, reaction, action, sd):
         if url not in self.vars['pages']:
-            self.vars['pages'][url] = {a: {'sum':0, 'obs':0} for a in setupVars.vars['ACTIONS']}
+            self.vars['pages'][url][sd] = {a: {'sum':0, 'obs':0} for a in setupVars.vars['ACTIONS']}
 
-        self.vars['pages'][url][action]['sum'] +=  self.vars['V'][prev_state] + self.vars['V'][next_state]
-        self.vars['pages'][url][action]['obs'] += 1
+        if sd not in self.vars['pages'][url]:
+            self.vars['pages'][url][sd] = {a: {'sum':0, 'obs':0} for a in setupVars.vars['ACTIONS']}
+
+        self.vars['pages'][url][sd][action]['sum'] +=  setupVars.vars['REACTION_REWARD'][action][reaction]
+        self.vars['pages'][url][sd][action]['obs'] += 1
 
     def recordTransitionProbs(self, prev_state, action, reaction):
         self.observation[prev_state] = True
@@ -153,7 +168,8 @@ def getNewCell(s,reaction):
 
 
 setupVars = setup()
-learnedObjects = learnedObjectsVars()
+userData =  userSourceData()
+segmentObjects = segmentData()
 
 import random
 app = Flask(__name__)
@@ -161,7 +177,15 @@ sockets = Sockets(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def welcome():
-    return render_template('landingPage.html')
+    return render_template('landingPage.html', direct = userData.source['direct'],\
+    search = userData.source['search'],  social = userData.source['social'])
+
+@app.route('/initiateSession', methods=['GET','POST'])
+def initSession():
+    source = request.json['source']
+    userData.recordSource(source)
+    userData.currentSource = source
+    return str(url_for('home'))
 
 @app.route('/mdp_setup', methods=['GET', 'POST'])
 def mdp_setup():
@@ -174,7 +198,8 @@ def getNews():
 @app.route('/loadSetup', methods=['POST'])
 def loadSetup():
     print "\nSetting up parameters ... \n"
-    json.dump( {},open('userData.json','w'))
+
+    userData.source = {}
 
     setupVars.vars = {}
     learnedObjects.init()
@@ -203,17 +228,20 @@ def loadSetup():
     ncells = setupVars.vars['MAX_ATSOP_ROWS'] * setupVars.vars['MAX_SD_COLS']
 
     ncells = [x for x in range(ncells)] + [999]
-    Q = {x+1:{x:0.0 for x in ACTIONS} for x in ncells}
-    EXECUTED_POLICY = {x+1:{x:0.0 for x in ACTIONS} for x in ncells}
+    for segment in  ['direct','search','social']:
+        learnedObjects = learnedObjectsVars()
+        Q = {x+1:{x:0.0 for x in ACTIONS} for x in ncells}
+        EXECUTED_POLICY = {x+1:{x:0.0 for x in ACTIONS} for x in ncells}
 
-    learnedObjects.vars['Q'] = Q
-    learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:'n' for x in ncells}
-    learnedObjects.vars['V'] = {x+1: 0 for x in ncells}
-    learnedObjects.vars['EXECUTED_POLICY'] = EXECUTED_POLICY
-    learnedObjects.vars['pages'] =defaultdict(dict)
-    learnedObjects.vars['transitionProbs'] = {x+1:{action:{'obs':3,'down':1,'right':1,'dead':1 } for action in setupVars.vars['ACTIONS']} for x in ncells }
+        learnedObjects.vars['Q'] = Q
+        learnedObjects.vars['OPTIMAL_POLICY'] = {x+1:'n' for x in ncells}
+        learnedObjects.vars['V'] = {x+1: 0 for x in ncells}
+        learnedObjects.vars['EXECUTED_POLICY'] = EXECUTED_POLICY
+        learnedObjects.vars['pages'] =defaultdict(dict)
+        learnedObjects.vars['transitionProbs'] = {x+1:{action:{'obs':3,'down':1,'right':1,'dead':1 } for action in setupVars.vars['ACTIONS']} for x in ncells }
 
-    learnedObjects.save()
+        # learnedObjects.save()
+        segmentObjects.vars[segment] = learnedObjects
 
     return str(url_for('welcome'))
 
@@ -232,6 +260,8 @@ def home():
 
 @app.route('/feedback', methods=['POST'])
 def updates():
+    learnedObjects = segmentObjects.vars[userData.currentSource]
+
     ignoreDead = False
     data = request.json # it has prev_state,next_state, action, reaction
     print data
@@ -252,7 +282,7 @@ def updates():
 
         learnedObjects.updateQ(i['prev_state'], i['next_state'], i['action'],i['reaction'])
         learnedObjects.recordPolicy(i['prev_state'], i['action'])
-        learnedObjects.recordPageValue(i['url'], i['prev_state'], i['next_state'], i['action'])
+        learnedObjects.recordPageValue(i['url'], i['reaction'], i['action'],i['SD'])
         learnedObjects.recordTransitionProbs(i['prev_state'], i['action'], i['reaction'])
         learnedObjects.updateV(i['prev_state'], i['next_state'], i['action'],i['reaction'])
 
@@ -327,8 +357,10 @@ def getUsedPolicy():
     #normalize
     for i in p:
         total = sum(p[i].values())
+        if total ==0:
+            p[i] = ('?/','?')
         _max= max(p[i].iteritems(), key=lambda x:x[1])
-        p[i] = (_max[0], round(1.0*_max[1]/(1+total),1))
+        p[i] = (_max[0], round(1.0*_max[1]/total,1))
 
     out1,out2 = [],[]
     actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
@@ -350,11 +382,12 @@ def getUsedPolicy():
 
 @app.route('/getPages')
 def getPages():
-    out = {}
+    out = defaultdict(dict)
     pages = learnedObjects.vars['pages']
     actions = setupVars.vars['ACTIONS']
     for i in pages:
-        out[i]  = {action: round(1.0*pages[i][action]['sum']/ (1+pages[i][action]['obs']),2) for action in actions}
+        for sd in pages[i]:
+            out[i][sd]  = {action: round(1.0*pages[i][sd][action]['sum']/ (1+pages[i][sd][action]['obs']),2) for action in actions}
     return jsonify({'pages': out })
 
 @app.route('/getOptV')

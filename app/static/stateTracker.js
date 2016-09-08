@@ -1,8 +1,10 @@
 var sessionEnded = false;
 var ATSOPboundary = false;
 var SDboundary = false;
+var lastAction = false;
+var old_sd = 1;
 function recordFeedback(cell, action, reaction){
-  URL  = 'exp'
+  // URL  = 'exp'
   // console.log("record feedback", cell,action, reaction, "end")
   if(reaction == 'down'){
       if(CELL > MAX_ATSOP_ROWS*SD){
@@ -25,10 +27,10 @@ function recordFeedback(cell, action, reaction){
             SDboundary = false;
           }
         }
-        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell, 'SD':SD})
       }
   }else if(reaction == 'right'){
-
+      current_sd = SD
       if(SD > MAX_SD_COLS){
         // no reaction
         next_cell = cell
@@ -51,13 +53,13 @@ function recordFeedback(cell, action, reaction){
           drawDot('left', action)
           next_cell = cell + MAX_ATSOP_ROWS
         }
-        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+        FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell, 'SD':current_sd})
       }
   }else{
     if(sessionEnded) return;
     sessionEnded = true;
     next_cell = 1000
-    FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell})
+    FEEDBACK.push({'url':URL,'prev_state':cell, 'action':action, 'reaction':reaction, 'next_state':next_cell, 'SD':SD})
     controller('stop','nothing')
     $.ajax({
       url: "http://0.0.0.0:9090/feedback",
@@ -78,19 +80,33 @@ function activateCounter(){
 
 
       ATSOP +=ATSOP_GAP
+      if(old_sd != SD){
+        lastAction = false;
+      }
+
       if (CELL <= MAX_ATSOP_ROWS*SD ){
         recordFeedback(CELL,'nothing', 'down') // first execcution takes place after interval.
         // when the atsop_gap time is done it crosses that cell
         // hence record feedback at that instant
+
+        if(CELL == MAX_ATSOP_ROWS*SD){
+          lastAction=true
+        }
+
+        if(lastAction==false){
+          action = chooseAction(ACTION_PROB)
+          takeAction(action)
+        }
+
       } else{
         // do nothing
       }
+      old_sd = SD
 
 
       // even rows (CELL%MAX_ATSOP_ROWS)%2==0
       // if(CELL==2 || CELL ==5 || CELL ==8){
-        action = chooseAction(ACTION_PROB)
-        takeAction(action)
+
       // }
 
   }, ATSOP_GAP*1000)
