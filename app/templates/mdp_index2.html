@@ -65,94 +65,174 @@
     <div id= "output">
       <div style="height: 60px;"> <button id="update_results" class= "btn2">Update</button></div>
 
-      <div id="Q" class="results">
-        <h3>Q-Actions</h3>
-        <!-- Plotly chart will be drawn inside this DIV -->
-        <div id="QDiv0" class="Q" style="width:480px; height:400px;"></div>
-        <div id="QDiv1" class="Q" style="width:480px; height:400px;"></div>
-        <div id="QDiv2" class="Q" style="width:480px; height:400px;"></div>
+      <div id="buttons">
+          <div class="buttons" id='EA_btn'><p>Executed Actions</p></div>
+          <div class="buttons" id='Q_btn'><p>Q-Actions</p></div>
+          <div class="buttons" id='V_btn'><p>Value Matrix</p></div>
+          <div class="buttons" id='UVM_btn'><p>User Value</p></div>
+          <div class="buttons" id='PAV_btn'><p>Page Action Value</p></div>
+          <div class="buttons" id='OA_btn'><p>Optimal Actions</p></div>
       </div>
 
-      <hr style="border-top: dotted 1px;" />
+      <div id='resultsPlaceholder'>
 
-      <div id="others" class="results">
-        <div id="used_policy" class="minions">
-          <h3>Executed Policy</h3>
-          <div id="UPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+        <div id="EA" class="results">
+          <div> <h3 style="text-align:center">Direct</h3><br>
+            <div id="directUPolicyDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Search</h3><br>
+            <div id="searchUPolicyDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Social</h3><br>
+            <div id="socialUPolicyDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
         </div>
-        <div id="optimum" class="minions">
-          <h3>Optimal policy</h3>
-          <div id="OPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+
+        <div id="Q" class="results" >
+          <!-- Plotly chart will be drawn inside this DIV -->
+          <div> <h3 style="text-align:center">Direct</h3><br>
+            <div id="directQDiv0" class="Q" style="width:480px; height:400px;"></div>
+            <div id="directQDiv1" class="Q" style="width:480px; height:400px;"></div>
+            <div id="directQDiv2" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Search</h3><br>
+            <div id="searchQDiv0" class="Q" style="width:480px; height:400px;"></div>
+            <div id="searchQDiv1" class="Q" style="width:480px; height:400px;"></div>
+            <div id="searchQDiv2" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Social</h3><br>
+            <div id="socialQDiv0" class="Q" style="width:480px; height:400px;"></div>
+            <div id="socialQDiv1" class="Q" style="width:480px; height:400px;"></div>
+            <div id="socialQDiv2" class="Q" style="width:480px; height:400px;"></div>
+          </div>
         </div>
-        <div id="value" class= "minions">
-          <h3>Value Matrix</h3>
-          <div id="VDiv" class ="Q" style="width:480px; height:400px;"></div>
+
+        <div id="V" class= "results">
+          <div> <h3 style="text-align:center">Direct</h3><br>
+            <div id="directVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Search</h3><br>
+            <div id="searchVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr>
+          <div> <h3 style="text-align:center">Social</h3><br>
+            <div id="socialVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
         </div>
-        <div id="value" class= "minions">
-          <h3>Optimal Value Matrix</h3>
-          <div id="OVDiv" class ="Q" style="width:480px; height:400px;"></div>
+
+        <div id ='UVM' class="results">
+          <div id ='lhs'>
+          <br><br>$Value\ of\ the\ User\ (\ t\ =\ 1\ month):$
+          </div>
+            <div id= 'N'>
+              $\ \ \ N(t)$ <br><br><br>
+              $\ $<input id="N_in" type="number" name="N" value="10" style="width: 45px; border-color:black; text-align:right; height:30px; font-size:15px;" onchange="updateValue(this.value)">
+            </div>
+
+            <div id='multiply1'>
+              $*$
+            </div>
+
+            <div id ='similarity'>
+              $Segment\ Similarity$<br><br>
+              <div>
+                $direct\ \ :\ $ ${}$<br><br>
+                $search\ :\ $ ${}$<br><br>
+                $social\ \ :\ $ ${}$<br><br>
+              </div>
+            </div>
+
+            <div id='multiply2'>
+              $*$
+            </div>
+
+            <div id="V1">
+              $V(1)$<br><br>
+              <div id="value_user">
+                $\${}$<br><br>
+                $\${}$<br><br>
+                $\${}$<br><br>
+              </div>
+            </div>
+            <div id="equal">
+              <br><br>$=$
+            </div>
+            <div id='rhs'>
+              <br><br>$\${}$
+            </div>
         </div>
+
+
+        <div id = "PAV" class="results">
+            <h3 style="text-align:center">Direct</h3><br>
+            <div id="pages">
+
+              <table id="directpagesTable">
+                <thead>
+                  <tr id='actions'>
+                    <!-- need to add actions dynamically -->
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+            <hr>
+
+            <h3 style="text-align:center">Search</h3><br>
+            <div id="pages">
+              <table id="searchpagesTable">
+                <thead>
+                  <tr id='actions'>
+                    <!-- need to add actions dynamically -->
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+            <hr>
+
+            <h3 style="text-align:center">Social</h3><br>
+            <div id="pages">
+              <table id="socialpagesTable">
+                <thead>
+                  <tr id='actions'>
+                    <!-- need to add actions dynamically -->
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+        </div>
+
+
+        <div id="OA" class="results">
+          <div> <h3 style="text-align:center">Direct</h3><br>
+            <div id="directOPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+            <div id="directOVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr style='height:100%;'/>
+          <div> <h3 style="text-align:center">Search</h3><br>
+            <div id="searchOPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+            <div id="searchOVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+          <hr style='height:100%;'/>
+          <div> <h3 style="text-align:center">Social</h3><br>
+            <div id="socialOPolicyDiv" class ="Q" style="width:480px; height:400px;"></div>
+            <div id="socialOVDiv" class="Q" style="width:480px; height:400px;"></div>
+          </div>
+        </div>
+
+
+
       </div>
-
-      <hr style="border-top: dotted 1px;" />
-
-      <div id ='clv' class="results">
-        <div id ='lhs'>
-        <br><br>$Value\ of\ the\ User\ (\ t\ =\ 1\ month):$
-        </div>
-          <div id= 'N'>
-            $\ \ \ N(t)$ <br><br><br>
-            $\ $<input id="N_in" type="number" name="N" value="10" style="width: 45px; border-color:black; text-align:right; height:30px; font-size:15px;" onchange="updateValue(this.value)">
-          </div>
-
-          <div id='multiply1'>
-            $*$
-          </div>
-
-          <div id ='similarity'>
-            $Segment\ Similarity$<br><br>
-            $direct\ \ :\ 1.0$<br><br>
-            $search\ :\ 0.0$<br><br>
-            $social\ \ :\ 0.0$<br><br>
-          </div>
-
-          <div id='multiply2'>
-            $*$
-          </div>
-
-          <div id="V1">
-            $V(1)$<br><br>
-            <div id="value_user">$\${}$</div><br>
-            $\$0.0$<br><br>
-            $\$0.0$<br><br>
-          </div>
-          <div id="equal">
-            <br><br>$=$
-          </div>
-          <div id='rhs'>
-            <br><br>$\${}$
-          </div>
-      </div>
-
-      <div id = "pages" class="results">
-        <div id="page_value" class="minions">
-          <h3>Value of the Pages</h3>
-          <div id="PageValue" class ="Q" style="width:480px; height:400px;">
-            <table id="pagesTable">
-              <thead>
-                <tr id='actions'>
-                  <!-- need to add actions dynamically -->
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-
-
-            </table>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </body>
@@ -228,10 +308,14 @@
      }
 
     ACTIONS = Object.keys(out.action)
-    $("#pagesTable > thead > tr").empty()
-    $("#pagesTable > thead > tr").append("<th> Page </th><th> Session Depth </th>")
-    for(i in ACTIONS){
-      $("#pagesTable > thead > #actions").append('<th>'+ACTIONS[i]+'</th>')
+    segments= ['direct', 'search', 'social']
+    for(i in segments){
+      div = segments[i]+'pagesTable'
+      $("#"+div+" > thead > tr").empty()
+      $("#"+div+" > thead > tr").append("<th> Page </th><th> Session Depth </th>")
+      for(i in ACTIONS){
+        $("#"+div+" > thead > #actions").append('<th>'+ACTIONS[i]+'</th>')
+      }
     }
 
     $.ajax({
@@ -245,8 +329,10 @@
         updatePlots(x_labels, y_labels)
       }
     });
-
    }
+
+
+
 
  </script>
 
@@ -260,21 +346,42 @@
    })
 
    var QUEUE = MathJax.Hub.queue;
-   var money = null;
-   var value = null;
-   QUEUE.Push(function () {
-     money = MathJax.Hub.getAllJax("rhs")[0];
-     value = MathJax.Hub.getAllJax("value_user")[0];
-   });
-
-   window.updateValue = function(N) {
-     var value = parseFloat(MathJax.Hub.getAllJax("value_user")[0].originalText.slice(1))
-     console.log(value, N)
-     QUEUE.Push(["Text", money, "\\displaystyle{$"+ round(value*N, 2) + "}" ])
-   }
-
   //  QUEUE.Push(["Text", value, "$0.0"])
 
  </script>
+
+
+ <!-- make the display board for results -->
+ <script>
+   function toggle(div, action){
+     if(div=='PAV' && action == 'flex'){
+       action = 'block'
+     }
+     $("#"+div).css('display',action)
+     if(action!= 'none'){
+       $("#"+div+"_btn").css('height','79px')
+       $("#"+div+"_btn").css('border-width','2px')
+       $("#"+div+"_btn").css('font-size','25')
+     }else{
+       $("#"+div+"_btn").css('height','63px')
+       $("#"+div+"_btn").css('border-width','1px')
+       $("#"+div+"_btn").css('font-size','20')
+     }
+   }
+
+   ACTIVEDIV = 'EA'
+   toggle(ACTIVEDIV, 'flex')
+   buttons = $('.buttons')
+
+   $.each(buttons, function(x){
+     $(buttons[x]).on('click', function(){
+       toggle(ACTIVEDIV,'none');
+       ACTIVEDIV = buttons[x].id.slice(0,-4)
+       toggle(ACTIVEDIV, 'flex');
+     });
+   });
+
+ </script>
+
 
 </html>

@@ -1,0 +1,13 @@
+User spending time at certain sessoin depth has some pages available for him.
+Rank those pages so that likelihood or expected value from the user increases.
+This should result in a higher value of the first state. VERIFY
+
+
+Pages have their action matrices.
+
+User is being tracked and the ebst path can be found by making sure that he gets closer to high value states or away from negative states. In case right is required, it can only be due to link recommendations. These recommendations can be designed in a way to increase the value of user. 
+
+Whichever column the user is in currenty, take all the pages values corresponding to next columns. Rank them according to the value fo their next cells. or some combination of remaining cells. 
+
+
+

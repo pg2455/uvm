@@ -1,17 +1,18 @@
 
-function updatePlots(x_labels, y_labels){
+function updatePlots(x_labels, y_labels){44444444444
   // draw Q
   $.ajax({
     dataType:'json',
     url:'/getQ',
     type:"GET",
     success:function(data){
-      count =0
-
-      for(i in data){
-        div = 'QDiv'+count
-        drawHeatMap(div, data[i], i, count == Object.keys(data).length-1,x_labels, y_labels)
-        count+=1
+      for(segment in data){
+        count=0
+        for(i in data[segment]){
+          div = segment+'QDiv'+count
+          drawHeatMap(div, data[segment][i], i, count == Object.keys(data).length-1,x_labels, y_labels)
+          count+=1
+        }
       }
     },
     cache:false
@@ -25,15 +26,29 @@ function updatePlots(x_labels, y_labels){
     url:'/getV',
     type:"GET",
     success:function(data){
+      // console.log(data);
+      // return
+      count =0
+      sim_count = 2
+      for(segment in data){
+        div = segment+'VDiv'
+        drawHeatMap(div, data[segment]['V'],'Value Matrix', true ,x_labels, y_labels)
+        value1 = data[segment].value
+        similarity1 = data[segment].similarity
+        value = MathJax.Hub.getAllJax("value_user")[count];
+        similarity = MathJax.Hub.getAllJax("similarity")[sim_count];
+        QUEUE.Push(["Text", value, "$"+round(value1, 2) ]);
+        QUEUE.Push(["Text",similarity, round(similarity1, 2) ])
 
-      value1 = data.value
-      console.log(value1, data.V)
-      value = MathJax.Hub.getAllJax("value_user")[0];
-      QUEUE.Push(["Text", value, "$"+round(value1, 2) ])
-      updateValue(parseFloat($("#N_in").attr('value')))
-
-      div = 'VDiv'
-      drawHeatMap(div, data['V'],'Value Matrix', true ,x_labels, y_labels)
+        count++;
+        sim_count+=2; // diff structure there
+      }
+      updateValue(parseFloat($("#N_in").attr('value')));
+      // value1 = data.value
+      // console.log(value1, data.V)
+      // value = MathJax.Hub.getAllJax("value_user")[0];
+      // QUEUE.Push(["Text", value, "$"+round(value1, 2) ])
+      // updateValue(parseFloat($("#N_in").attr('value')))
     },
     cache:false
   });
@@ -44,13 +59,15 @@ function updatePlots(x_labels, y_labels){
     url:'/getPolicy',
     type:"GET",
     success:function(data){
-      if(data['SARSA'] == true){
-        title = 'SARSA Optimal Policy'
-      }else{
-        title = 'Locally Optimal Policy'
+      for(segment in data){
+        if(data[segment]['SARSA'] == true){
+          title = 'SARSA Optimal Policy'
+        }else{
+          title = 'Locally Optimal Policy'
+        }
+        div = segment+'OPolicyDiv'
+        drawHeatMap(div, data[segment]['number'],title, true ,x_labels, y_labels, data[segment]['policy'])
       }
-      div = 'OPolicyDiv'
-      drawHeatMap(div, data['number'],title, true ,x_labels, y_labels, data['policy'])
     },
     cache:false
   });
@@ -61,8 +78,10 @@ function updatePlots(x_labels, y_labels){
     url:'/getUsedPolicy',
     type:"GET",
     success:function(data){
-      div = 'UPolicyDiv'
-      drawHeatMap(div, data['number'],'Used Policy', true ,x_labels, y_labels, data['policy'])
+      for(segment in data){
+        div = segment+'UPolicyDiv'
+        drawHeatMap(div, data[segment]['number'],'Used Policy', true ,x_labels, y_labels, data[segment]['policy'])
+      }
     },
     cache:false
   });
@@ -73,20 +92,25 @@ function updatePlots(x_labels, y_labels){
     url:'/getPages',
     type:"GET",
     success:function(data){
-        pages = data['pages']
-        console.log(pages)
-        $('#pagesTable > tbody').empty()
+      for(segment in data){
+        pages = data[segment]['pages']
+        div = segment+'pagesTable'
+        $('#' +div+' > tbody').empty()
+
         for(i in pages){
+
           for(sd in pages[i]){
-            parent  = $('<tr/>').appendTo('#pagesTable > tbody')
+            parent  = $('<tr/>').appendTo('#' +div+' > tbody')
             parent.append('<td>'+ i + '</td>')
             parent.append('<td>' + sd + '</td>')
+
             for(a in ACTIONS){
               parent.append('<td>' + pages[i][sd][ACTIONS[a]] + '</td>')
             }
-          }
 
+          }
         }
+      }
     },
     cache:false
   });
@@ -97,12 +121,13 @@ function updatePlots(x_labels, y_labels){
     url:'/getOptV',
     type:"GET",
     success:function(data){
-
-      if(data['OptV'].length != 0){
-        div = 'OVDiv'
-        drawHeatMap(div, data['OptV'],'Optimal Value Matrix', true ,x_labels, y_labels)
-      }else{
-        $("#ODiv").empty()
+      for(segment in data){
+        if(data[segment]['OptV'].length != 0){
+          div = segment+'OVDiv'
+          drawHeatMap(div, data[segment]['OptV'],'Optimal Value Matrix', true ,x_labels, y_labels)
+        }else{
+          $("#"+segment+"ODiv").empty()
+        }
       }
     },
     cache:false
@@ -199,5 +224,29 @@ function drawHeatMap(div, Q, action, legend,x,y,z_annot = 0){
 
 
 function round(value, decimals) {
+  if (value == 0){
+    return 0.0
+  }
   return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function updateValue(N){
+  if(QUEUE.queue.length==0){
+    money = MathJax.Hub.getAllJax("rhs")[0];
+    values = MathJax.Hub.getAllJax("value_user")
+    similarity = MathJax.Hub.getAllJax("similarity")
+    sim_count = 2
+    sum = 0
+    for(i in values){
+      v= parseFloat(values[i].originalText.slice(1))
+      s = parseFloat(similarity[sim_count].originalText)
+      // console.log(v,s, similarity[sim_count].originalText, values[i].originalText)
+      sim_count +=2
+      sum +=v*s
+    }
+    QUEUE.Push(["Text", money, "\\displaystyle{$"+ round(sum*N, 2) + "}" ])
+  }else{
+    setTimeout(function(){console.log(1);updateValue(N)}, 1500)
+  }
+
 }

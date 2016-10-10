@@ -21,6 +21,11 @@ class userSourceData(object):
     def recordSource(self, source):
         self.source[source]+=1
 
+    def getSimilarity(self, segment):
+        if sum(self.source.values()) ==0:
+            return 0
+        return 1.0*self.source[segment]/sum(self.source.values())
+
 class segmentData(object):
     def __init__(self):
         self.vars = {}
@@ -167,13 +172,14 @@ def getNewCell(s,reaction):
         return s + 1
 
 
-setupVars = setup()
-userData =  userSourceData()
-segmentObjects = segmentData()
 
 import random
 app = Flask(__name__)
 sockets = Sockets(app)
+
+setupVars = setup()
+userData =  userSourceData()
+segmentObjects = segmentData()
 
 @app.route('/', methods=['GET', 'POST'])
 def welcome():
@@ -189,7 +195,7 @@ def initSession():
 
 @app.route('/mdp_setup', methods=['GET', 'POST'])
 def mdp_setup():
-    return render_template('mdp_index.html')
+    return render_template('mdp_index2.html')
 
 @app.route('/getNews', methods=['GET', 'POST'])
 def getNews():
@@ -199,10 +205,12 @@ def getNews():
 def loadSetup():
     print "\nSetting up parameters ... \n"
 
-    userData.source = {}
+    userData.__init__()
 
     setupVars.vars = {}
-    learnedObjects.init()
+    for segment in  ['direct','search','social']:
+        segmentObjects.vars[segment] = learnedObjectsVars()
+
 
     data = request.json
 
@@ -301,109 +309,135 @@ def updates():
 
 @app.route('/getQ')
 def getQ():
-    out = defaultdict(list)
-
+    total = {}
     # convert the Q dictionary in the format of heatmap
-    for a in setupVars.vars['ACTIONS']:
-        for i in learnedObjects.vars['Q']:
-            if i <= setupVars.vars['MAX_ATSOP_ROWS']:
-                row = [ learnedObjects.vars['Q'][i+x*setupVars.vars['MAX_ATSOP_ROWS']][a]  for x in range(setupVars.vars['MAX_SD_COLS'])]
-                out[a].append(row)
-            else:
-                break
-        out[a] = out[a][::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    return jsonify(out)
+    for segment in ['direct','search','social']:
+        out = defaultdict(list)
+        for a in setupVars.vars['ACTIONS']:
+            learnedObjects = segmentObjects.vars[segment]
+            for i in learnedObjects.vars['Q']:
+                if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+                    row = [ learnedObjects.vars['Q'][i+x*setupVars.vars['MAX_ATSOP_ROWS']][a]  for x in range(setupVars.vars['MAX_SD_COLS'])]
+                    out[a].append(row)
+                else:
+                    break
+            out[a] = out[a][::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+        total[segment] = out
+    return jsonify(total)
 
 @app.route('/getV')
 def getV():
-    out = []
-    for i in learnedObjects.vars['V']:
-        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
-            row = [ learnedObjects.vars['V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
-            out.append(row)
-        else:
-            break
-    value = out[0][0]
-    out = out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    return jsonify({'V' :out, 'value':value})
-
-@app.route('/getPolicy')
-def getPolicy():
-    SARSA = learnedObjects.readyForSARSA()
-
-    out1,out2 = [],[]
-    actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
-
-    for i in learnedObjects.vars['V']:
-        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
-            tmp1,tmp2 = [],[]
-            for x in range(setupVars.vars['MAX_SD_COLS']):
-                a  = learnedObjects.vars['OPTIMAL_POLICY'][i+x*setupVars.vars['MAX_ATSOP_ROWS']]
-
-                tmp1.append(actions[a[0]])
-                tmp2.append(a[0])
-
-            out1.append(tmp1)
-            out2.append(tmp2)
-        else:
-            break
-    out1,out2 = out1[::-1], out2[::-1]
-    # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    return jsonify({'policy' :out2, 'number':out1, 'SARSA':SARSA})
-
-@app.route('/getUsedPolicy')
-def getUsedPolicy():
-    p = learnedObjects.vars['EXECUTED_POLICY'].copy()
-    #normalize
-    for i in p:
-        total = sum(p[i].values())
-        if total ==0:
-            p[i] = ('?/','?')
-        _max= max(p[i].iteritems(), key=lambda x:x[1])
-        p[i] = (_max[0], round(1.0*_max[1]/total,1))
-
-    out1,out2 = [],[]
-    actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
-    for i in learnedObjects.vars['V']:
-        if i <= setupVars.vars['MAX_ATSOP_ROWS']:
-            tmp1,tmp2 = [],[]
-            for x in range(setupVars.vars['MAX_SD_COLS']):
-                a  = p[i+x*setupVars.vars['MAX_ATSOP_ROWS']]
-                tmp1.append(actions[a[0][0]])
-                tmp2.append(str(a[0][0])+" "+ str(a[1]))
-
-            out1.append(tmp1)
-            out2.append(tmp2)
-        else:
-            break
-    out1,out2 = out1[::-1], out2[::-1]
-    # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    return jsonify({'policy' :out2, 'number':out1})
-
-@app.route('/getPages')
-def getPages():
-    out = defaultdict(dict)
-    pages = learnedObjects.vars['pages']
-    actions = setupVars.vars['ACTIONS']
-    for i in pages:
-        for sd in pages[i]:
-            out[i][sd]  = {action: round(1.0*pages[i][sd][action]['sum']/ (1+pages[i][sd][action]['obs']),2) for action in actions}
-    return jsonify({'pages': out })
-
-@app.route('/getOptV')
-def getOptV():
-    out = [[0 for x in range(setupVars.vars['MAX_SD_COLS'])] for y in  range(setupVars.vars['MAX_ATSOP_ROWS']) ]
-    if learnedObjects.readyForSARSA():
-        out  = []
-        for i in learnedObjects.vars['OPTIMAL_V']:
+    total = {}
+    for segment in ['direct','search','social']:
+        out = []
+        learnedObjects = segmentObjects.vars[segment]
+        for i in learnedObjects.vars['V']:
             if i <= setupVars.vars['MAX_ATSOP_ROWS']:
-                row = [ learnedObjects.vars['OPTIMAL_V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
+                row = [ learnedObjects.vars['V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
                 out.append(row)
             else:
                 break
-        out =  out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
-    # print out
-    return jsonify({'OptV' :out})
+        value = out[0][0]
+        out = out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+        total[segment] = {'V' :out, 'value':value, 'similarity': userData.getSimilarity(segment) }
+    return jsonify(total)
+
+@app.route('/getPolicy')
+def getPolicy():
+    total = {}
+    for segment in ['direct','search','social']:
+        learnedObjects  = segmentObjects.vars[segment]
+        SARSA = learnedObjects.readyForSARSA()
+
+        out1,out2 = [],[]
+        actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
+
+        for i in learnedObjects.vars['V']:
+            if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+                tmp1,tmp2 = [],[]
+                for x in range(setupVars.vars['MAX_SD_COLS']):
+                    a  = learnedObjects.vars['OPTIMAL_POLICY'][i+x*setupVars.vars['MAX_ATSOP_ROWS']]
+
+                    tmp1.append(actions[a[0]])
+                    tmp2.append(a[0])
+
+                out1.append(tmp1)
+                out2.append(tmp2)
+            else:
+                break
+        out1,out2 = out1[::-1], out2[::-1]
+        # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+        total[segment] = {'policy' :out2, 'number':out1, 'SARSA':SARSA}
+    return jsonify(total)
+
+@app.route('/getUsedPolicy')
+def getUsedPolicy():
+    total = {}
+    for segment in ['direct','search','social']:
+        learnedObjects  = segmentObjects.vars[segment]
+        p = learnedObjects.vars['EXECUTED_POLICY'].copy()
+        #normalize
+        for i in p:
+            total_ = sum(p[i].values())
+            if total_ ==0:
+                p[i] = ('?/','?')
+                continue
+            _max= max(p[i].iteritems(), key=lambda x:x[1])
+            p[i] = (_max[0], round(1.0*_max[1]/total_,1))
+
+        out1,out2 = [],[]
+        actions = {x[0]:e for e,x in enumerate(setupVars.vars['ACTIONS'])}
+        actions['?'] = 4
+        for i in learnedObjects.vars['V']:
+            if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+                tmp1,tmp2 = [],[]
+                for x in range(setupVars.vars['MAX_SD_COLS']):
+                    a  = p[i+x*setupVars.vars['MAX_ATSOP_ROWS']]
+                    tmp1.append(actions[a[0][0]])
+                    tmp2.append(str(a[0][0])+" "+ str(a[1]))
+
+                out1.append(tmp1)
+                out2.append(tmp2)
+            else:
+                break
+        out1,out2 = out1[::-1], out2[::-1]
+        # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+        total[segment] = {'policy' :out2, 'number':out1}
+    return jsonify(total)
+
+@app.route('/getPages')
+def getPages():
+    total = {}
+    for segment in ['direct','search','social']:
+        learnedObjects  = segmentObjects.vars[segment]
+        out = defaultdict(dict)
+        pages = learnedObjects.vars['pages']
+        actions = setupVars.vars['ACTIONS']
+        for i in pages:
+            for sd in pages[i]:
+                out[i][sd]  = {action: round(1.0*pages[i][sd][action]['sum']/ (1+pages[i][sd][action]['obs']),2) for action in actions}
+        total[segment] = {'pages': out }
+
+    return jsonify(total)
+
+@app.route('/getOptV')
+def getOptV():
+    total = {}
+    for segment in ['direct','search','social']:
+        learnedObjects  = segmentObjects.vars[segment]
+        out = [[0 for x in range(setupVars.vars['MAX_SD_COLS'])] for y in  range(setupVars.vars['MAX_ATSOP_ROWS']) ]
+        if learnedObjects.readyForSARSA():
+            out  = []
+            for i in learnedObjects.vars['OPTIMAL_V']:
+                if i <= setupVars.vars['MAX_ATSOP_ROWS']:
+                    row = [ learnedObjects.vars['OPTIMAL_V'][i+x*setupVars.vars['MAX_ATSOP_ROWS']] for x in range(setupVars.vars['MAX_SD_COLS'])]
+                    out.append(row)
+                else:
+                    break
+            out =  out[::-1] # so that heatpmap is displayed top(0s) to bottom(max number fof seconds)
+        # print out
+        total[segment] = {'OptV' :out}
+    return jsonify(total)
 
 if __name__ == "__main__":
     news = {'news': json.load(open('./static/news.json'))}
