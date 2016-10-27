@@ -38,7 +38,7 @@ class learnedObjectsVars(object):
         self.vars = {}
         self.vars['OPTIMAL_Q'] = {}
         self.vars['OPTIMAL_V'] = {}
-        self.observation = {}
+        self.observation = {} # transition probs
 
     def save(self):
         json.dump(self.vars,open('./static/learnedObjects.json', 'w'))
@@ -74,7 +74,6 @@ class learnedObjectsVars(object):
         # print self.observation.keys()
         self.vars['transitionProbs'][prev_state][action]['obs']+=1
         self.vars['transitionProbs'][prev_state][action][reaction] +=1
-
 
     def getSARSAOptimizedPolicy(self, epsilon, iterations):
         current_policy = self.vars['OPTIMAL_POLICY'].copy()
@@ -128,6 +127,10 @@ class learnedObjectsVars(object):
         # print set(self.vars['Q'].keys()) - set([1000]) - set(self.observation.keys())
         return len(set(self.vars['Q'].keys()) - set([1000]) - set(self.observation.keys()) ) == 0
 
+    def recordActionValues(self, action, reaction):
+        self.vars['actionStats'][action]['frequency'] += 1
+        self.vars['actionStats'][action]['value'] += setupVars.vars['REACTION_REWARD'][action][reaction]
+
 def decideAction(action,actions, epsilon):
     # epsilon / len(actions) to all and 1-epsilon to action additional
     weights = [(a, [epsilon/len(actions), 1- epsilon + epsilon/len(actions) ][a==action]) for a in actions]
@@ -152,7 +155,6 @@ def optimizePolicy(Q):
         policy[cell] = _max[0]
     return policy, V
 
-
 def getNewCell(s,reaction):
     if reaction == 'dead':
         return 1000
@@ -170,8 +172,6 @@ def getNewCell(s,reaction):
 
     if reaction == 'down':
         return s + 1
-
-
 
 import random
 app = Flask(__name__)
@@ -247,6 +247,7 @@ def loadSetup():
         learnedObjects.vars['EXECUTED_POLICY'] = EXECUTED_POLICY
         learnedObjects.vars['pages'] =defaultdict(dict)
         learnedObjects.vars['transitionProbs'] = {x+1:{action:{'obs':3,'down':1,'right':1,'dead':1 } for action in setupVars.vars['ACTIONS']} for x in ncells }
+        learnedObjects.vars['actionStats'] = {x:{'value' : 0, 'frequency': 0} for x in ACTIONS}
 
         # learnedObjects.save()
         segmentObjects.vars[segment] = learnedObjects
@@ -271,7 +272,7 @@ def updates():
     learnedObjects = segmentObjects.vars[userData.currentSource]
 
     ignoreDead = False
-    data = request.json # it has prev_state,next_state, action, reaction
+    data = request.json # it has prev_state, next_state, action, reaction
     print data
     # update Q
     nobs = len(data['feedback1'])
@@ -293,6 +294,7 @@ def updates():
         learnedObjects.recordPageValue(i['url'], i['reaction'], i['action'],i['SD'])
         learnedObjects.recordTransitionProbs(i['prev_state'], i['action'], i['reaction'])
         learnedObjects.updateV(i['prev_state'], i['next_state'], i['action'],i['reaction'])
+        learnedObjects.recordActionValues(i['action'],i['reaction'])
 
     # find out optimal policy & find out V
     learnedObjects.updateVandPolicy()
@@ -438,6 +440,27 @@ def getOptV():
         # print out
         total[segment] = {'OptV' :out}
     return jsonify(total)
+
+@app.route('/getOptimalPolicyForSimulation', methods = ['GET'])
+def getOptPolicy():
+    source = request.json['source']
+    learnedObjects = segmentObjects.vars[source]
+    return jsonify(learnedObjects.vars['OPTIMAL_POLICY'])
+
+@app.route('/getactionStats', methods=['GET'])
+def actionStats():
+    source = request.json['source']
+    learnedObjects = segmentObjects.vars[source]
+    stats = learnedObjects.vars['actionStats']
+    out = {}
+    for x,y in stats.iteritems():
+        out[x] = 1.0 * y['value'] / [1,y['frequency']][y['frequency']!=0]
+
+    q = {x:learnedObjects.vars['Q'][1][x] for x in setupVars.vars['ACTIONS']}
+    v = learnedObjects.vars['V'][1]
+    stats = learnedObjects.vars['actionStats'] = {x:{'value' : 0, 'frequency': 0} for x in setupVars.vars['ACTIONS']}
+    return jsonify({'cpm':out, 'Q':q, 'V':v})
+
 
 if __name__ == "__main__":
     news = {'news': json.load(open('./static/news.json'))}
